@@ -27,14 +27,8 @@ export function ProductSection() {
             <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1 h-64 bg-gradient-to-t from-primary to-transparent" />
           </div>
 
-          <h2 className="text-5xl lg:text-7xl font-bold mb-8 cyber-text-glow">
-            Continuous threat modeling,
-          </h2>
-          <h2 className="text-5xl lg:text-7xl font-bold mb-8">
-            AI insights, and remediation.
-          </h2>
           <h2 className="text-5xl lg:text-7xl font-bold mb-16 cyber-text-glow">
-            All in your workflow.
+            Continuous threat modeling
           </h2>
         </motion.div>
 
