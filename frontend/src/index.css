@@ -1,0 +1,135 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Cybersecurity Dark Theme */
+    --background: 222 100% 4%;
+    --foreground: 0 0% 88%;
+
+    --card: 222 84% 5%;
+    --card-foreground: 0 0% 88%;
+
+    --popover: 222 84% 5%;
+    --popover-foreground: 0 0% 88%;
+
+    --primary: 120 100% 50%;
+    --primary-foreground: 222 100% 4%;
+
+    --secondary: 222 50% 10%;
+    --secondary-foreground: 0 0% 88%;
+
+    --muted: 222 50% 8%;
+    --muted-foreground: 0 0% 60%;
+
+    --accent: 120 100% 50%;
+    --accent-foreground: 222 100% 4%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 222 50% 15%;
+    --input: 222 50% 15%;
+    --ring: 120 100% 50%;
+
+    /* Custom cybersecurity colors */
+    --cyber-green: 120 100% 50%;
+    --cyber-green-glow: 120 100% 60%;
+    --cyber-dark: 222 100% 4%;
+    --cyber-darker: 222 100% 2%;
+    --cyber-glass: 222 50% 8%;
+    --cyber-glass-border: 120 100% 50% / 0.3;
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    /* Same as root for consistency */
+    --background: 222 100% 4%;
+    --foreground: 0 0% 88%;
+
+    --card: 222 84% 5%;
+    --card-foreground: 0 0% 88%;
+
+    --popover: 222 84% 5%;
+    --popover-foreground: 0 0% 88%;
+
+    --primary: 120 100% 50%;
+    --primary-foreground: 222 100% 4%;
+
+    --secondary: 222 50% 10%;
+    --secondary-foreground: 0 0% 88%;
+
+    --muted: 222 50% 8%;
+    --muted-foreground: 0 0% 60%;
+
+    --accent: 120 100% 50%;
+    --accent-foreground: 222 100% 4%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 222 50% 15%;
+    --input: 222 50% 15%;
+    --ring: 120 100% 50%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground overflow-x-hidden;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  }
+
+  /* Cybersecurity specific styles */
+  .cyber-glow {
+    box-shadow: 0 0 20px hsl(var(--cyber-green) / 0.5);
+  }
+  
+  .cyber-text-glow {
+    text-shadow: 0 0 10px hsl(var(--cyber-green) / 0.8);
+  }
+
+  .glassmorphism {
+    background: hsl(var(--cyber-glass) / 0.1);
+    backdrop-filter: blur(20px);
+    border: 1px solid hsl(var(--cyber-glass-border));
+  }
+
+  .particle-bg {
+    background: radial-gradient(circle at 50% 50%, hsl(var(--cyber-green) / 0.1) 0%, transparent 50%);
+  }
+}
