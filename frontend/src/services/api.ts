@@ -191,6 +191,17 @@ class ApiService {
         return response.json();
     }
 
+    async getAnalysisLogs(analysisId: string): Promise<{ analysis_id: string; logs: string }> {
+        const response = await fetch(`/api/v1/analysis/${analysisId}/logs`);
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to get analysis logs');
+        }
+
+        return response.json();
+    }
+
     async checkHealth(): Promise<{ status: string; service: string }> {
         const response = await fetch('/health');
 

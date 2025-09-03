@@ -1,7 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { Scene3D } from "./Scene3D";
 import { useAnalysis } from "@/hooks/useAnalysis";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 function UploadZipBlock({ onFileSelect, isLoading }: { onFileSelect: (file: File) => void; isLoading: boolean }) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -52,7 +55,11 @@ function UploadZipBlock({ onFileSelect, isLoading }: { onFileSelect: (file: File
 export function HeroSection() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [githubUrl, setGithubUrl] = useState("");
-  const { analyzeGitHubRepo, analyzeFile, isLoading, error, analysisResult } = useAnalysis();
+  const [githubLoading, setGithubLoading] = useState(false);
+  const [zipLoading, setZipLoading] = useState(false);
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const { analyzeGitHubRepo, analyzeFile, isLoading, error, analysisResult, analysisId } = useAnalysis();
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -65,21 +72,62 @@ export function HeroSection() {
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
+  // Show toast when analysis completes and reset loading states
+  useEffect(() => {
+    if (analysisResult) {
+      // Reset both loading states when analysis completes
+      setGithubLoading(false);
+      setZipLoading(false);
+      
+      const totalVulns = analysisResult.vulnerabilities?.length || 0;
+      const criticalCount = analysisResult.summary?.severity_breakdown?.critical || 0;
+      const highCount = analysisResult.summary?.severity_breakdown?.high || 0;
+      const mediumCount = analysisResult.summary?.severity_breakdown?.medium || 0;
+      const lowCount = analysisResult.summary?.severity_breakdown?.low || 0;
+      
+      let description = `Found ${totalVulns} total issues`;
+      if (criticalCount > 0 || highCount > 0) {
+        description += ` (${criticalCount} critical, ${highCount} high priority)`;
+      }
+      description += `. Processing time: ${analysisResult.processing_time || 'Unknown'}`;
+
+      toast({
+        title: "🎯 Analysis Complete!",
+        description,
+        duration: 5000,
+      });
+    }
+  }, [analysisResult, toast]);
+
+  // Reset loading states on error
+  useEffect(() => {
+    if (error) {
+      setGithubLoading(false);
+      setZipLoading(false);
+    }
+  }, [error]);
+
   const handleGitHubAnalysis = async () => {
     if (!githubUrl.trim()) return;
     
+    setGithubLoading(true);
     try {
       await analyzeGitHubRepo(githubUrl.trim());
     } catch (err) {
       console.error('GitHub analysis failed:', err);
+    } finally {
+      setGithubLoading(false);
     }
   };
 
   const handleFileAnalysis = async (file: File) => {
+    setZipLoading(true);
     try {
       await analyzeFile(file);
     } catch (err) {
       console.error('File analysis failed:', err);
+    } finally {
+      setZipLoading(false);
     }
   };
 
@@ -135,16 +183,20 @@ export function HeroSection() {
           </motion.div>
         )}
 
-        {/* Success Display */}
-        {analysisResult && (
+        {/* Simple Success Display */}
+        {analysisResult && analysisId && (
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="col-span-full glassmorphism border border-green-500/30 rounded-lg p-4 bg-green-500/10"
+            transition={{ duration: 0.3 }}
+            className="col-span-full flex justify-center mt-6"
           >
-            <p className="text-green-500 text-center">
-              Analysis completed! Found {analysisResult.vulnerabilities?.length || 0} vulnerabilities.
-            </p>
+            <Button
+              onClick={() => navigate(`/logs/${analysisId}`)}
+              className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2 font-medium"
+            >
+              View Logs
+            </Button>
           </motion.div>
         )}
 
@@ -167,14 +219,14 @@ export function HeroSection() {
                 onChange={(e) => setGithubUrl(e.target.value)}
                 placeholder="https://github.com/owner/repo"
                 className="w-full bg-transparent border border-primary/40 rounded px-3 py-2 focus:outline-none focus:border-primary/70"
-                disabled={isLoading}
+                disabled={githubLoading}
               />
               <button 
                 onClick={handleGitHubAnalysis}
-                disabled={isLoading || !githubUrl.trim()}
+                disabled={githubLoading || !githubUrl.trim()}
                 className="px-4 py-2 border border-primary/40 rounded hover:cyber-glow transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isLoading ? 'Analyzing...' : 'Analyze'}
+                {githubLoading ? 'Analyzing...' : 'Analyze'}
               </button>
             </div>
             <p className="mt-2 text-xs text-foreground/60">
@@ -192,7 +244,7 @@ export function HeroSection() {
             <label className="block text-sm text-foreground/70 mb-2">
               Upload a project zip
             </label>
-            <UploadZipBlock onFileSelect={handleFileAnalysis} isLoading={isLoading} />
+            <UploadZipBlock onFileSelect={handleFileAnalysis} isLoading={zipLoading} />
           </motion.div>
         </div>
       </div>

@@ -110,11 +110,11 @@ export default {
 					to: { height: '0' }
 				},
 				'pulse-glow': {
-					'0%, 100%': { 
+					'0%, 100%': {
 						boxShadow: '0 0 20px hsl(var(--cyber-green) / 0.5)',
 						transform: 'scale(1)'
 					},
-					'50%': { 
+					'50%': {
 						boxShadow: '0 0 40px hsl(var(--cyber-green) / 0.8)',
 						transform: 'scale(1.05)'
 					}
@@ -130,5 +130,21 @@ export default {
 			}
 		}
 	},
-	plugins: [require("tailwindcss-animate")],
+	plugins: [
+		require("tailwindcss-animate"),
+		function ({ addUtilities }) {
+			addUtilities({
+				'.scrollbar-hide': {
+					/* IE and Edge */
+					'-ms-overflow-style': 'none',
+					/* Firefox */
+					'scrollbar-width': 'none',
+					/* Safari and Chrome */
+					'&::-webkit-scrollbar': {
+						display: 'none'
+					}
+				}
+			})
+		}
+	],
 } satisfies Config;
