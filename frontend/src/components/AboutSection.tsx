@@ -1,33 +1,37 @@
-import { motion } from 'framer-motion';
-import { useInView } from 'framer-motion';
-import { useRef } from 'react';
-import { Eye, Lock, Shield, Zap } from 'lucide-react';
+import { motion } from "framer-motion";
+import { useInView } from "framer-motion";
+import { useRef } from "react";
+import { Eye, Lock, Shield, Zap } from "lucide-react";
 
 const aboutItems = [
   {
-    title: "Provide Solutions",
-    description: "We deliver cutting-edge cybersecurity solutions tailored to modern threats.",
+    title: "Continuous Modeling",
+    description:
+      "Always-on threat maps that update as your code and cloud change.",
     icon: Shield,
-    animation: "geometric"
+    animation: "geometric",
   },
   {
-    title: "Staying Ahead",
-    description: "Our team continuously evolves to stay ahead of emerging cyber threats.",
+    title: "AI-Driven Insights",
+    description:
+      "Findings ranked by severity with clear, developer-first remediation.",
     icon: Zap,
-    animation: "device"
+    animation: "device",
   },
   {
-    title: "Experience",
-    description: "Years of expertise in protecting digital assets and infrastructure.",
+    title: "Code & Cloud Aware",
+    description:
+      "Understands frameworks, endpoints, configs, secrets, and misconfigurations.",
     icon: Eye,
-    animation: "data-flow"
+    animation: "data-flow",
   },
   {
-    title: "How We Help",
-    description: "Comprehensive security assessments and continuous monitoring services.",
+    title: "Actionable for Devs",
+    description:
+      "Security that fits your workflow—no expertise required to get value.",
     icon: Lock,
-    animation: "security"
-  }
+    animation: "security",
+  },
 ];
 
 export function AboutSection() {
@@ -37,7 +41,7 @@ export function AboutSection() {
   return (
     <section id="about" className="min-h-screen py-20 relative">
       <div className="absolute inset-0 bg-gradient-to-br from-background via-cyber-darker to-background" />
-      
+
       <div ref={ref} className="container mx-auto px-6 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 50 }}
@@ -46,10 +50,10 @@ export function AboutSection() {
           className="text-center mb-16"
         >
           <h2 className="text-5xl lg:text-7xl font-bold mb-8">
-            We are a <span className="cyber-text-glow">boutique</span>
+            <span className="cyber-text-glow">Adaptive Threat Modeler</span>
           </h2>
-          <h2 className="text-5xl lg:text-7xl font-bold mb-8 cyber-text-glow">
-            cyber security company
+          <h2 className="text-4xl lg:text-6xl font-bold mb-8 cyber-text-glow">
+            Continuous, AI-powered security
           </h2>
         </motion.div>
 
@@ -57,7 +61,7 @@ export function AboutSection() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {aboutItems.map((item, index) => {
             const IconComponent = item.icon;
-            
+
             return (
               <motion.div
                 key={item.title}
@@ -71,7 +75,11 @@ export function AboutSection() {
                   {item.animation === "geometric" && (
                     <motion.div
                       animate={{ rotate: 360 }}
-                      transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+                      transition={{
+                        duration: 10,
+                        repeat: Infinity,
+                        ease: "linear",
+                      }}
                       className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
                     >
                       <div className="w-32 h-32 border border-primary/30">
@@ -80,7 +88,7 @@ export function AboutSection() {
                       </div>
                     </motion.div>
                   )}
-                  
+
                   {item.animation === "device" && (
                     <motion.div
                       animate={{ scale: [1, 1.1, 1] }}
@@ -96,7 +104,7 @@ export function AboutSection() {
                       />
                     </motion.div>
                   )}
-                  
+
                   {item.animation === "data-flow" && (
                     <div className="absolute inset-0">
                       {[...Array(6)].map((_, i) => (
@@ -104,23 +112,23 @@ export function AboutSection() {
                           key={i}
                           animate={{
                             x: [0, 100, 0],
-                            opacity: [0, 1, 0]
+                            opacity: [0, 1, 0],
                           }}
                           transition={{
                             duration: 2,
                             repeat: Infinity,
-                            delay: i * 0.3
+                            delay: i * 0.3,
                           }}
                           className="absolute w-2 h-2 bg-primary/40 rounded-full"
                           style={{
-                            top: 20 + i * 15 + '%',
-                            left: '10%'
+                            top: 20 + i * 15 + "%",
+                            left: "10%",
                           }}
                         />
                       ))}
                     </div>
                   )}
-                  
+
                   {item.animation === "security" && (
                     <motion.div
                       animate={{ rotateY: [0, 180, 360] }}

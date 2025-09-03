@@ -9,22 +9,22 @@ All colors MUST be HSL.
 @layer base {
   :root {
     /* Cybersecurity Dark Theme */
-    --background: 222 100% 4%;
+    --background: 0 0% 0%;
     --foreground: 0 0% 88%;
 
-    --card: 222 84% 5%;
+    --card: 0 0% 3%;
     --card-foreground: 0 0% 88%;
 
-    --popover: 222 84% 5%;
+    --popover: 0 0% 3%;
     --popover-foreground: 0 0% 88%;
 
     --primary: 120 100% 50%;
     --primary-foreground: 222 100% 4%;
 
-    --secondary: 222 50% 10%;
+    --secondary: 0 0% 6%;
     --secondary-foreground: 0 0% 88%;
 
-    --muted: 222 50% 8%;
+    --muted: 0 0% 5%;
     --muted-foreground: 0 0% 60%;
 
     --accent: 120 100% 50%;
@@ -40,9 +40,9 @@ All colors MUST be HSL.
     /* Custom cybersecurity colors */
     --cyber-green: 120 100% 50%;
     --cyber-green-glow: 120 100% 60%;
-    --cyber-dark: 222 100% 4%;
-    --cyber-darker: 222 100% 2%;
-    --cyber-glass: 222 50% 8%;
+    --cyber-dark: 0 0% 0%;
+    --cyber-darker: 0 0% 0%;
+    --cyber-glass: 0 0% 5%;
     --cyber-glass-border: 120 100% 50% / 0.3;
 
     --radius: 0.5rem;
@@ -111,14 +111,15 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground overflow-x-hidden;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+      "Roboto", sans-serif;
   }
 
   /* Cybersecurity specific styles */
   .cyber-glow {
     box-shadow: 0 0 20px hsl(var(--cyber-green) / 0.5);
   }
-  
+
   .cyber-text-glow {
     text-shadow: 0 0 10px hsl(var(--cyber-green) / 0.8);
   }
@@ -130,6 +131,10 @@ All colors MUST be HSL.
   }
 
   .particle-bg {
-    background: radial-gradient(circle at 50% 50%, hsl(var(--cyber-green) / 0.1) 0%, transparent 50%);
+    background: radial-gradient(
+      circle at 50% 50%,
+      hsl(var(--cyber-green) / 0.1) 0%,
+      transparent 50%
+    );
   }
 }
