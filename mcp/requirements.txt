@@ -1,0 +1,14 @@
+langchain
+langchain-core
+langgraph
+langchain-openai
+langchain-mcp-adapters
+
+pydantic
+typing-extensions
+nest-asyncio
+
+tavily-python
+python-dotenv
+langchain_mcp_adapters
+requests
