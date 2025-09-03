@@ -166,6 +166,11 @@ func (a *Analyzer) extractFile(file *zip.File, destPath string) error {
 		return fmt.Errorf("invalid file path: %s", file.Name)
 	}
 
+	// Skip macOS metadata files and other unwanted files
+	if a.shouldSkipFile(cleanPath) {
+		return nil
+	}
+
 	filePath := filepath.Join(destPath, cleanPath)
 
 	// Create directory if needed
@@ -364,16 +369,36 @@ func (a *Analyzer) analyzeSourceFiles(projectPath string, projectInfo *models.Pr
 			return err
 		}
 
-		// Skip directories and non-source files
-		if info.IsDir() || !a.isSourceFile(path, projectInfo.Languages) {
+		// Skip directories
+		if info.IsDir() {
+			return nil
+		}
+		
+		// Skip unwanted files (metadata, binaries, etc.)
+		relPath, _ := filepath.Rel(projectPath, path)
+		if a.shouldSkipFile(relPath) {
+			fmt.Printf("Skipping unwanted file: %s\n", relPath)
+			return nil
+		}
+		
+		// Skip non-source files
+		if !a.isSourceFile(path, projectInfo.Languages) {
 			return nil
 		}
 
 		// Parse file and check for vulnerabilities
 		fileVulns, err := a.analyzeFile(path, projectPath, rules)
 		if err != nil {
-			// Log error but continue with other files
-			fmt.Printf("Error analyzing file %s: %v\n", path, err)
+			// Check if it's a binary file or parsing error
+			if strings.Contains(err.Error(), "illegal character NUL") || 
+			   strings.Contains(err.Error(), "invalid UTF-8") ||
+			   strings.Contains(err.Error(), "binary file detected") {
+				// Skip binary files silently
+				fmt.Printf("Skipping binary file: %s\n", relPath)
+				return nil
+			}
+			// Log other errors but continue with other files
+			fmt.Printf("Error analyzing file %s: %v\n", relPath, err)
 			return nil
 		}
 
@@ -399,6 +424,11 @@ func (a *Analyzer) analyzeFile(filePath, projectRoot string, rules []SecurityRul
 	content, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, err
+	}
+	
+	// Check if file is binary (contains null bytes in first 512 bytes)
+	if a.isBinaryFile(content) {
+		return nil, fmt.Errorf("binary file detected, skipping")
 	}
 
 	// Get relative path for reporting
@@ -478,6 +508,105 @@ func (a *Analyzer) isSourceFile(filePath string, languages []string) bool {
 		}
 	}
 
+	return false
+}
+
+// shouldSkipFile determines if a file should be skipped during extraction/analysis
+func (a *Analyzer) shouldSkipFile(filePath string) bool {
+	// Skip macOS metadata files
+	if strings.Contains(filePath, "__MACOSX/") {
+		return true
+	}
+	
+	// Skip macOS resource fork files (._filename)
+	fileName := filepath.Base(filePath)
+	if strings.HasPrefix(fileName, "._") {
+		return true
+	}
+	
+	// Skip hidden files and directories
+	if strings.HasPrefix(fileName, ".") && fileName != ".env" && fileName != ".gitignore" {
+		return true
+	}
+	
+	// Skip common binary/build artifacts
+	skipPatterns := []string{
+		".DS_Store",
+		"Thumbs.db",
+		"desktop.ini",
+		".git/",
+		".svn/",
+		"node_modules/",
+		"vendor/",
+		"target/",
+		"build/",
+		"dist/",
+		"out/",
+		"bin/",
+		"obj/",
+		"__pycache__/",
+		".pytest_cache/",
+		".venv/",
+		"venv/",
+		".idea/",
+		".vscode/",
+		"*.exe",
+		"*.dll",
+		"*.so",
+		"*.dylib",
+		"*.jar",
+		"*.war",
+		"*.zip",
+		"*.tar",
+		"*.gz",
+		"*.rar",
+		"*.7z",
+		"*.pdf",
+		"*.doc",
+		"*.docx",
+		"*.xls",
+		"*.xlsx",
+		"*.ppt",
+		"*.pptx",
+		"*.jpg",
+		"*.jpeg",
+		"*.png",
+		"*.gif",
+		"*.bmp",
+		"*.ico",
+		"*.svg",
+		"*.mp3",
+		"*.mp4",
+		"*.avi",
+		"*.mov",
+		"*.wmv",
+		"*.flv",
+	}
+	
+	lowerPath := strings.ToLower(filePath)
+	for _, pattern := range skipPatterns {
+		if strings.Contains(lowerPath, strings.ToLower(pattern)) {
+			return true
+		}
+	}
+	
+	return false
+}
+
+// isBinaryFile checks if the file content is binary by looking for null bytes
+func (a *Analyzer) isBinaryFile(content []byte) bool {
+	// Check first 512 bytes for null bytes (common binary file indicator)
+	checkLength := 512
+	if len(content) < checkLength {
+		checkLength = len(content)
+	}
+	
+	for i := 0; i < checkLength; i++ {
+		if content[i] == 0 {
+			return true
+		}
+	}
+	
 	return false
 }
 
