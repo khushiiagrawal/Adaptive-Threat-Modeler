@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"path/filepath"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -10,6 +11,7 @@ import (
 
 	"adaptive-threat-modeler/internal/api"
 	"adaptive-threat-modeler/internal/config"
+	"adaptive-threat-modeler/internal/handlers"
 )
 
 func main() {
@@ -42,10 +44,14 @@ func main() {
 		MaxAge:           300,
 	}))
 
+	// Initialize commit storage
+	storagePath := filepath.Join(".", "data", "commits")
+	handlers.InitializeCommitStorage(storagePath)
+
 	// Health check
 	app.Get("/health", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{
-			"status": "healthy",
+			"status":  "healthy",
 			"service": "adaptive-threat-modeler",
 		})
 	})
@@ -57,4 +63,3 @@ func main() {
 	log.Printf("Server starting on port %s", cfg.Port)
 	log.Fatal(app.Listen(":" + cfg.Port))
 }
-

@@ -2,7 +2,7 @@ package api
 
 import (
 	"github.com/gofiber/fiber/v2"
-	
+
 	"adaptive-threat-modeler/internal/handlers"
 )
 
@@ -26,7 +26,12 @@ func SetupRoutes(app *fiber.App) {
 	api.Get("/rules", handlers.GetAvailableRules)
 	api.Get("/rules/:language", handlers.GetRulesForLanguage)
 
+	// Commit analysis endpoints
+	api.Get("/commits/latest", handlers.GetLatestCommitAnalysis)
+	api.Get("/commits/:hash", handlers.GetCommitAnalysisByHash)
+	api.Get("/commits", handlers.GetAllCommitAnalyses)
+	api.Post("/commits", handlers.StoreCommitAnalysis)
+
 	// Health and info endpoints
 	api.Get("/info", handlers.GetSystemInfo)
 }
-

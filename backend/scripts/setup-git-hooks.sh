@@ -61,7 +61,7 @@ fi
 # Run the commit analysis
 echo "🔍 Running commit analysis..."
 cd "$REPO_ROOT"
-"$GIT_HOOK_BINARY" --hook --repo "$REPO_ROOT"
+"$GIT_HOOK_BINARY" --hook --api --api-url "http://localhost:8000" --repo "$REPO_ROOT"
 
 echo "✅ Post-commit analysis complete!"
 EOF
