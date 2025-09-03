@@ -1,47 +1,23 @@
 {
-  "id": "commit_609254d4_1756933046",
-  "timestamp": "2025-09-04T02:27:26.479257+05:30",
-  "commit_hash": "609254d4b93e732e0ee4d960ab59faa0fac5bfdb",
+  "id": "commit_5a78aa75_1756933367",
+  "timestamp": "2025-09-04T02:32:47.659037+05:30",
+  "commit_hash": "5a78aa7507b365502fee7f11664af08621537cec",
   "author": "arpit529srivastava",
   "email": "arpitsrivastava529@gmail.com",
-  "message": "checking\n\nSigned-off-by: arpit529srivastava \u003carpitsrivastava529@gmail.com\u003e\n",
+  "message": "checking456\n\nSigned-off-by: arpit529srivastava \u003carpitsrivastava529@gmail.com\u003e\n",
   "files_changed": [
-    "backend/bin/threat-modeler",
-    "backend/internal/handlers/commit_analysis.go",
-    "backend/internal/models/models.go",
     "hello.cpp"
   ],
-  "additions": 34,
-  "deletions": 2,
+  "additions": 3,
+  "deletions": 0,
   "file_diffs": [
-    {
-      "file_name": "backend/bin/threat-modeler",
-      "status": "M",
-      "additions": 0,
-      "deletions": 0,
-      "diff": "diff --git a/backend/bin/threat-modeler b/backend/bin/threat-modeler\nindex 7d1690e..37c5fdd 100755\nBinary files a/backend/bin/threat-modeler and b/backend/bin/threat-modeler differ\n"
-    },
-    {
-      "file_name": "backend/internal/handlers/commit_analysis.go",
-      "status": "M",
-      "additions": 15,
-      "deletions": 2,
-      "diff": "diff --git a/backend/internal/handlers/commit_analysis.go b/backend/internal/handlers/commit_analysis.go\nindex 0dfa311..7920b16 100644\n--- a/backend/internal/handlers/commit_analysis.go\n+++ b/backend/internal/handlers/commit_analysis.go\n@@ -14,11 +14,11 @@ var commitStorage *services.CommitStorageService\n // InitializeCommitStorage initializes the commit storage service\n func InitializeCommitStorage(storagePath string) {\n \tcommitStorage = services.NewCommitStorageService(storagePath)\n }\n \n-// GetLatestCommitAnalysis returns the most recent commit analysis data\n+// GetLatestCommitAnalysis returns the most recent commit analysis data (simplified version)\n func GetLatestCommitAnalysis(c *fiber.Ctx) error {\n \tif commitStorage == nil {\n \t\treturn c.Status(500).JSON(fiber.Map{\n \t\t\t\"error\":   true,\n \t\t\t\"message\": \"Commit storage not initialized\",\n@@ -31,13 +31,26 @@ func GetLatestCommitAnalysis(c *fiber.Ctx) error {\n \t\t\t\"error\":   true,\n \t\t\t\"message\": err.Error(),\n \t\t})\n \t}\n \n+\t// Convert to simplified version without file diffs and full diff\n+\tsimplifiedData := \u0026models.SimplifiedCommitData{\n+\t\tID:           analysis.ID,\n+\t\tTimestamp:    analysis.Timestamp,\n+\t\tCommitHash:   analysis.CommitHash,\n+\t\tAuthor:       analysis.Author,\n+\t\tEmail:        analysis.Email,\n+\t\tMessage:      analysis.Message,\n+\t\tAdditions:    analysis.Additions,\n+\t\tDeletions:    analysis.Deletions,\n+\t\tFilesChanged: analysis.FilesChanged,\n+\t}\n+\n \treturn c.JSON(fiber.Map{\n \t\t\"success\": true,\n-\t\t\"data\":    analysis,\n+\t\t\"data\":    simplifiedData,\n \t})\n }\n \n // GetCommitAnalysisByHash returns commit analysis data for a specific commit hash\n func GetCommitAnalysisByHash(c *fiber.Ctx) error {\n"
-    },
-    {
-      "file_name": "backend/internal/models/models.go",
-      "status": "M",
-      "additions": 13,
-      "deletions": 0,
-      "diff": "diff --git a/backend/internal/models/models.go b/backend/internal/models/models.go\nindex 19bb831..db42a8c 100644\n--- a/backend/internal/models/models.go\n+++ b/backend/internal/models/models.go\n@@ -167,5 +167,18 @@ type FileDiff struct {\n \tAdditions   int    `json:\"additions\"`\n \tDeletions   int    `json:\"deletions\"`\n \tOldFileName string `json:\"old_file_name,omitempty\"` // For renamed files\n \tDiff        string `json:\"diff\"`                    // The actual diff content for this file\n }\n+\n+// SimplifiedCommitData represents a simplified version of commit data without detailed diffs\n+type SimplifiedCommitData struct {\n+\tID           string    `json:\"id\"`\n+\tTimestamp    time.Time `json:\"timestamp\"`\n+\tCommitHash   string    `json:\"commit_hash\"`\n+\tAuthor       string    `json:\"author\"`\n+\tEmail        string    `json:\"email\"`\n+\tMessage      string    `json:\"message\"`\n+\tAdditions    int       `json:\"additions\"`\n+\tDeletions    int       `json:\"deletions\"`\n+\tFilesChanged []string  `json:\"files_changed\"`\n+}\n"
-    },
     {
       "file_name": "hello.cpp",
       "status": "M",
-      "additions": 6,
+      "additions": 3,
       "deletions": 0,
-      "diff": "diff --git a/hello.cpp b/hello.cpp\nindex e69de29..f253cbe 100644\n--- a/hello.cpp\n+++ b/hello.cpp\n@@ -0,0 +1,6 @@\n+#include \u003ciostream\u003e\n+\n+int main() {\n+    std::cout \u003c\u003c \"Hello, World!\" \u003c\u003c std::endl;\n+    return 0;\n+}\n\\ No newline at end of file\n"
+      "diff": "diff --git a/hello.cpp b/hello.cpp\nindex 9df8bf2..7a4f2c8 100644\n--- a/hello.cpp\n+++ b/hello.cpp\n@@ -1,8 +1,11 @@\n #include \u003ciostream\u003e\n \n int main() {\n+    std::cout \u003c\u003c \"Hello, World!\" \u003c\u003c std::endl;\n+    std::cout \u003c\u003c \"Hello, World!\" \u003c\u003c std::endl;\n+    std::cout \u003c\u003c \"Hello, World!\" \u003c\u003c std::endl;\n     std::cout \u003c\u003c \"Hello, World!\" \u003c\u003c std::endl;\n     std::cout \u003c\u003c \"Hello, World!\" \u003c\u003c std::endl;\n     std::cout \u003c\u003c \"Hello, World!\" \u003c\u003c std::endl;\n     std::cout \u003c\u003c \"Hello, World!\" \u003c\u003c std::endl;\n     return 0;\n"
     }
   ],
-  "full_diff": " backend/bin/threat-modeler                   | Bin 15142242 -\u003e 15142354 bytes\n backend/internal/handlers/commit_analysis.go |  17 +++++++++++++++--\n backend/internal/models/models.go            |  13 +++++++++++++\n hello.cpp                                    |   6 ++++++\n 4 files changed, 34 insertions(+), 2 deletions(-)\n\ndiff --git a/backend/bin/threat-modeler b/backend/bin/threat-modeler\nindex 7d1690ed9f27f92e99c9944da1aa308b2950f128..37c5fdde69af1f96ea7fe0cc674bd7fe0936704a 100755\nBinary files a/backend/bin/threat-modeler and b/backend/bin/threat-modeler differ\ndiff --git a/backend/internal/handlers/commit_analysis.go b/backend/internal/handlers/commit_analysis.go\nindex 0dfa311588ac1f7b8e7250d8c715ffa55ccbb5af..7920b1653c52c4ea1f7acae5fee8a885fc2ac0bf 100644\n--- a/backend/internal/handlers/commit_analysis.go\n+++ b/backend/internal/handlers/commit_analysis.go\n@@ -14,11 +14,11 @@ var commitStorage *services.CommitStorageService\n // InitializeCommitStorage initializes the commit storage service\n func InitializeCommitStorage(storagePath string) {\n \tcommitStorage = services.NewCommitStorageService(storagePath)\n }\n \n-// GetLatestCommitAnalysis returns the most recent commit analysis data\n+// GetLatestCommitAnalysis returns the most recent commit analysis data (simplified version)\n func GetLatestCommitAnalysis(c *fiber.Ctx) error {\n \tif commitStorage == nil {\n \t\treturn c.Status(500).JSON(fiber.Map{\n \t\t\t\"error\":   true,\n \t\t\t\"message\": \"Commit storage not initialized\",\n@@ -31,13 +31,26 @@ func GetLatestCommitAnalysis(c *fiber.Ctx) error {\n \t\t\t\"error\":   true,\n \t\t\t\"message\": err.Error(),\n \t\t})\n \t}\n \n+\t// Convert to simplified version without file diffs and full diff\n+\tsimplifiedData := \u0026models.SimplifiedCommitData{\n+\t\tID:           analysis.ID,\n+\t\tTimestamp:    analysis.Timestamp,\n+\t\tCommitHash:   analysis.CommitHash,\n+\t\tAuthor:       analysis.Author,\n+\t\tEmail:        analysis.Email,\n+\t\tMessage:      analysis.Message,\n+\t\tAdditions:    analysis.Additions,\n+\t\tDeletions:    analysis.Deletions,\n+\t\tFilesChanged: analysis.FilesChanged,\n+\t}\n+\n \treturn c.JSON(fiber.Map{\n \t\t\"success\": true,\n-\t\t\"data\":    analysis,\n+\t\t\"data\":    simplifiedData,\n \t})\n }\n \n // GetCommitAnalysisByHash returns commit analysis data for a specific commit hash\n func GetCommitAnalysisByHash(c *fiber.Ctx) error {\ndiff --git a/backend/internal/models/models.go b/backend/internal/models/models.go\nindex 19bb831762ea26168167562af8532b9f5d25f56f..db42a8c246daffc5a1ace6ce1b1b5013c9a34e49 100644\n--- a/backend/internal/models/models.go\n+++ b/backend/internal/models/models.go\n@@ -167,5 +167,18 @@ type FileDiff struct {\n \tAdditions   int    `json:\"additions\"`\n \tDeletions   int    `json:\"deletions\"`\n \tOldFileName string `json:\"old_file_name,omitempty\"` // For renamed files\n \tDiff        string `json:\"diff\"`                    // The actual diff content for this file\n }\n+\n+// SimplifiedCommitData represents a simplified version of commit data without detailed diffs\n+type SimplifiedCommitData struct {\n+\tID           string    `json:\"id\"`\n+\tTimestamp    time.Time `json:\"timestamp\"`\n+\tCommitHash   string    `json:\"commit_hash\"`\n+\tAuthor       string    `json:\"author\"`\n+\tEmail        string    `json:\"email\"`\n+\tMessage      string    `json:\"message\"`\n+\tAdditions    int       `json:\"additions\"`\n+\tDeletions    int       `json:\"deletions\"`\n+\tFilesChanged []string  `json:\"files_changed\"`\n+}\ndiff --git a/hello.cpp b/hello.cpp\nindex e69de29bb2d1d6434b8b29ae775ad8c2e48c5391..f253cbe41afe163bb3d9777d37984aec781aaeff 100644\n--- a/hello.cpp\n+++ b/hello.cpp\n@@ -0,0 +1,6 @@\n+#include \u003ciostream\u003e\n+\n+int main() {\n+    std::cout \u003c\u003c \"Hello, World!\" \u003c\u003c std::endl;\n+    return 0;\n+}\n\\ No newline at end of file\n"
+  "full_diff": " hello.cpp | 3 +++\n 1 file changed, 3 insertions(+)\n\ndiff --git a/hello.cpp b/hello.cpp\nindex 9df8bf222eafa46e28a1461ca9007737bbce80cf..7a4f2c8d071dccef75ef7ff3c131a07d87ba4872 100644\n--- a/hello.cpp\n+++ b/hello.cpp\n@@ -1,8 +1,11 @@\n #include \u003ciostream\u003e\n \n int main() {\n+    std::cout \u003c\u003c \"Hello, World!\" \u003c\u003c std::endl;\n+    std::cout \u003c\u003c \"Hello, World!\" \u003c\u003c std::endl;\n+    std::cout \u003c\u003c \"Hello, World!\" \u003c\u003c std::endl;\n     std::cout \u003c\u003c \"Hello, World!\" \u003c\u003c std::endl;\n     std::cout \u003c\u003c \"Hello, World!\" \u003c\u003c std::endl;\n     std::cout \u003c\u003c \"Hello, World!\" \u003c\u003c std::endl;\n     std::cout \u003c\u003c \"Hello, World!\" \u003c\u003c std::endl;\n     return 0;\n"
 }
