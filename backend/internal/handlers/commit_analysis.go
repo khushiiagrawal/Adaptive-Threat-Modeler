@@ -16,7 +16,7 @@ func InitializeCommitStorage(storagePath string) {
 	commitStorage = services.NewCommitStorageService(storagePath)
 }
 
-// GetLatestCommitAnalysis returns the most recent commit analysis data (simplified version)
+// GetLatestCommitAnalysis returns the most recent commit analysis data
 func GetLatestCommitAnalysis(c *fiber.Ctx) error {
 	if commitStorage == nil {
 		return c.Status(500).JSON(fiber.Map{
@@ -44,6 +44,7 @@ func GetLatestCommitAnalysis(c *fiber.Ctx) error {
 		Additions:    analysis.Additions,
 		Deletions:    analysis.Deletions,
 		FilesChanged: analysis.FilesChanged,
+		FileDiffs:    analysis.FileDiffs,
 	}
 
 	return c.JSON(fiber.Map{
