@@ -297,4 +297,3 @@ go build -o adaptive-threat-modeler .
 ## License
 
 [License information here]
-

@@ -205,3 +205,63 @@ func getProgressPercentage(status string) int {
 	}
 }
 
+// AnalyzeGitCommit handles git commit analysis requests
+func AnalyzeGitCommit(c *fiber.Ctx) error {
+	var req struct {
+		RepoPath   string `json:"repo_path,omitempty"`
+		CommitHash string `json:"commit_hash,omitempty"`
+	}
+
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"error":   true,
+			"message": "Invalid request body",
+		})
+	}
+
+	// Determine repository path
+	var repoPath string
+	var err error
+	
+	if req.RepoPath != "" {
+		repoPath = req.RepoPath
+	} else {
+		repoPath, err = services.GetCurrentRepoPath()
+		if err != nil {
+			return c.Status(400).JSON(fiber.Map{
+				"error":   true,
+				"message": "Could not find git repository: " + err.Error(),
+			})
+		}
+	}
+
+	// Create git service
+	gitService := services.NewGitService(repoPath)
+
+	var commitDiff *services.CommitDiff
+
+	if req.CommitHash != "" {
+		// Analyze specific commit
+		commitDiff, err = gitService.GetCommitDiff(req.CommitHash)
+	} else {
+		// Analyze latest commit
+		commitDiff, err = gitService.GetLatestCommitDiff()
+	}
+
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{
+			"error":   true,
+			"message": "Failed to analyze commit: " + err.Error(),
+		})
+	}
+
+	// Print to console (as requested)
+	gitService.PrintCommitDiff(commitDiff)
+
+	return c.JSON(fiber.Map{
+		"error":   false,
+		"message": "Commit analysis completed successfully",
+		"data":    commitDiff,
+	})
+}
+
