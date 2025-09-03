@@ -184,6 +184,30 @@ func GetAnalysisStatus(c *fiber.Ctx) error {
 	})
 }
 
+// GetAnalysisLogs retrieves the analysis logs by ID
+func GetAnalysisLogs(c *fiber.Ctx) error {
+	analysisID := c.Params("id")
+	if analysisID == "" {
+		return c.Status(400).JSON(fiber.Map{
+			"error":   true,
+			"message": "Analysis ID is required",
+		})
+	}
+
+	logs, exists := services.GetAnalysisLogs(analysisID)
+	if !exists {
+		return c.Status(404).JSON(fiber.Map{
+			"error":   true,
+			"message": "Analysis logs not found",
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"analysis_id": analysisID,
+		"logs":        logs,
+	})
+}
+
 // Helper functions
 func isValidGitHubURL(url string) bool {
 	// Basic GitHub URL validation

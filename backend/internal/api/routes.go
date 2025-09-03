@@ -17,6 +17,7 @@ func SetupRoutes(app *fiber.App) {
 	api.Post("/analyze/commit", handlers.AnalyzeGitCommit)
 	api.Get("/analysis/:id", handlers.GetAnalysisResult)
 	api.Get("/analysis/:id/status", handlers.GetAnalysisStatus)
+	api.Get("/analysis/:id/logs", handlers.GetAnalysisLogs)
 
 	// Project detection endpoints
 	api.Post("/detect/languages", handlers.DetectLanguages)

@@ -2,6 +2,7 @@ package services
 
 import (
 	"archive/zip"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -24,6 +25,7 @@ type Analyzer struct {
 	ruleEngine    *RuleEngine
 	astParser     *ASTParser
 	resultStore   map[string]*models.AnalysisResult
+	logBuffer     *bytes.Buffer
 }
 
 // NewAnalyzer creates a new analyzer instance
@@ -34,6 +36,7 @@ func NewAnalyzer() *Analyzer {
 		ruleEngine:  NewRuleEngine(),
 		astParser:   NewASTParser(),
 		resultStore: make(map[string]*models.AnalysisResult),
+		logBuffer:   &bytes.Buffer{},
 	}
 }
 
@@ -215,16 +218,19 @@ func (a *Analyzer) analyzeProject(analysisID, projectPath string) (*models.Analy
 	}
 	result.ProjectInfo = *projectInfo
 	
+	// Reset log buffer for new analysis
+	a.logBuffer.Reset()
+	
 	// Log project information
-	fmt.Printf("\n=== PROJECT ANALYSIS STARTED ===\n")
-	fmt.Printf("Analysis ID: %s\n", analysisID)
-	fmt.Printf("Project Path: %s\n", projectPath)
-	fmt.Printf("Detected Languages: %v\n", projectInfo.Languages)
-	fmt.Printf("Detected Frameworks: %v\n", projectInfo.Frameworks)
-	fmt.Printf("Services Found: %d\n", len(projectInfo.Services))
-	fmt.Printf("Dependencies: %d\n", len(projectInfo.Dependencies))
-	fmt.Printf("Config Files: %v\n", projectInfo.ConfigFiles)
-	fmt.Printf("===============================\n")
+	a.logAndPrint("\n=== PROJECT ANALYSIS STARTED ===\n")
+	a.logAndPrint("Analysis ID: %s\n", analysisID)
+	a.logAndPrint("Project Path: %s\n", projectPath)
+	a.logAndPrint("Detected Languages: %v\n", projectInfo.Languages)
+	a.logAndPrint("Detected Frameworks: %v\n", projectInfo.Frameworks)
+	a.logAndPrint("Services Found: %d\n", len(projectInfo.Services))
+	a.logAndPrint("Dependencies: %d\n", len(projectInfo.Dependencies))
+	a.logAndPrint("Config Files: %v\n", projectInfo.ConfigFiles)
+	a.logAndPrint("===============================\n")
 
 	// Load relevant rules based on detected languages and frameworks
 	rules := a.ruleEngine.LoadRulesForProject(projectInfo)
@@ -237,9 +243,9 @@ func (a *Analyzer) analyzeProject(analysisID, projectPath string) (*models.Analy
 	result.Vulnerabilities = vulnerabilities
 
 	// Log detailed vulnerability information in AST-style JSON format
-	fmt.Printf("\n=== ANALYSIS COMPLETED ===\n")
-	fmt.Printf("Analysis ID: %s\n", analysisID)
-	fmt.Printf("Total vulnerabilities found: %d\n", len(vulnerabilities))
+	a.logAndPrint("\n=== ANALYSIS COMPLETED ===\n")
+	a.logAndPrint("Analysis ID: %s\n", analysisID)
+	a.logAndPrint("Total vulnerabilities found: %d\n", len(vulnerabilities))
 	
 	// Create AST-style output
 	astOutput := map[string]interface{}{
@@ -302,13 +308,13 @@ func (a *Analyzer) analyzeProject(analysisID, projectPath string) (*models.Analy
 	// Pretty print JSON
 	jsonBytes, err := json.MarshalIndent(astOutput, "", "  ")
 	if err == nil {
-		fmt.Printf("\n=== AST-STYLE JSON OUTPUT ===\n")
-		fmt.Println(string(jsonBytes))
+		a.logAndPrint("\n=== AST-STYLE JSON OUTPUT ===\n")
+		a.logAndPrint("%s\n", string(jsonBytes))
 	}
 	
 	// Also print summary for convenience
 	if len(vulnerabilities) > 0 {
-		fmt.Printf("\n=== VULNERABILITY SUMMARY ===\n")
+		a.logAndPrint("\n=== VULNERABILITY SUMMARY ===\n")
 		
 		// Group vulnerabilities by severity
 		severityGroups := make(map[string][]models.Vulnerability)
@@ -320,12 +326,12 @@ func (a *Analyzer) analyzeProject(analysisID, projectPath string) (*models.Analy
 		severityOrder := []string{"critical", "high", "medium", "low", "info"}
 		for _, severity := range severityOrder {
 			if vulns, exists := severityGroups[severity]; exists {
-				fmt.Printf("%s: %d vulnerabilities\n", strings.ToUpper(severity), len(vulns))
+				a.logAndPrint("%s: %d vulnerabilities\n", strings.ToUpper(severity), len(vulns))
 			}
 		}
 	}
 	
-	fmt.Printf("\n=== ANALYSIS SUMMARY ===\n")
+	a.logAndPrint("\n=== ANALYSIS SUMMARY ===\n")
 
 	// Generate threat map
 	threatMap := a.generateThreatMap(projectInfo, vulnerabilities)
@@ -336,25 +342,28 @@ func (a *Analyzer) analyzeProject(analysisID, projectPath string) (*models.Analy
 	result.Recommendations = a.generateRecommendations(projectInfo, vulnerabilities)
 	
 	// Log final summary
-	fmt.Printf("Risk Score: %.1f\n", result.Summary.RiskScore)
-	fmt.Printf("Security Posture: %s\n", result.Summary.SecurityPosture)
-	fmt.Printf("Severity Breakdown:\n")
+	a.logAndPrint("Risk Score: %.1f\n", result.Summary.RiskScore)
+	a.logAndPrint("Security Posture: %s\n", result.Summary.SecurityPosture)
+	a.logAndPrint("Severity Breakdown:\n")
 	for severity, count := range result.Summary.SeverityBreakdown {
 		if count > 0 {
-			fmt.Printf("  %s: %d\n", severity, count)
+			a.logAndPrint("  %s: %d\n", severity, count)
 		}
 	}
-	fmt.Printf("Category Breakdown:\n")
+	a.logAndPrint("Category Breakdown:\n")
 	for category, count := range result.Summary.CategoryBreakdown {
 		if count > 0 {
-			fmt.Printf("  %s: %d\n", category, count)
+			a.logAndPrint("  %s: %d\n", category, count)
 		}
 	}
-	fmt.Printf("Top Risks: %v\n", result.Summary.TopRisks)
-	fmt.Printf("Threat Map Components: %d\n", len(result.ThreatMap.Components))
-	fmt.Printf("Threat Map Data Flows: %d\n", len(result.ThreatMap.Flows))
-	fmt.Printf("Recommendations: %d\n", len(result.Recommendations))
-	fmt.Printf("==============================\n")
+	a.logAndPrint("Top Risks: %v\n", result.Summary.TopRisks)
+	a.logAndPrint("Threat Map Components: %d\n", len(result.ThreatMap.Components))
+	a.logAndPrint("Threat Map Data Flows: %d\n", len(result.ThreatMap.Flows))
+	a.logAndPrint("Recommendations: %d\n", len(result.Recommendations))
+	a.logAndPrint("==============================\n")
+
+	// Store the logs
+	StoreAnalysisLogs(analysisID, a.logBuffer.String())
 
 	return result, nil
 }
@@ -377,7 +386,7 @@ func (a *Analyzer) analyzeSourceFiles(projectPath string, projectInfo *models.Pr
 		// Skip unwanted files (metadata, binaries, etc.)
 		relPath, _ := filepath.Rel(projectPath, path)
 		if a.shouldSkipFile(relPath) {
-			fmt.Printf("Skipping unwanted file: %s\n", relPath)
+			a.logAndPrint("Skipping unwanted file: %s\n", relPath)
 			return nil
 		}
 		
@@ -394,20 +403,20 @@ func (a *Analyzer) analyzeSourceFiles(projectPath string, projectInfo *models.Pr
 			   strings.Contains(err.Error(), "invalid UTF-8") ||
 			   strings.Contains(err.Error(), "binary file detected") {
 				// Skip binary files silently
-				fmt.Printf("Skipping binary file: %s\n", relPath)
+				a.logAndPrint("Skipping binary file: %s\n", relPath)
 				return nil
 			}
 			// Log other errors but continue with other files
-			fmt.Printf("Error analyzing file %s: %v\n", relPath, err)
+			a.logAndPrint("Error analyzing file %s: %v\n", relPath, err)
 			return nil
 		}
 
 		// Log findings for this file
 		if len(fileVulns) > 0 {
 			relPath, _ := filepath.Rel(projectPath, path)
-			fmt.Printf("Found %d vulnerability(ies) in file: %s\n", len(fileVulns), relPath)
+			a.logAndPrint("Found %d vulnerability(ies) in file: %s\n", len(fileVulns), relPath)
 			for _, vuln := range fileVulns {
-				fmt.Printf("  - [%s] %s at line %d\n", vuln.Severity, vuln.Title, vuln.Location.Line)
+				a.logAndPrint("  - [%s] %s at line %d\n", vuln.Severity, vuln.Title, vuln.Location.Line)
 			}
 		}
 
@@ -723,8 +732,18 @@ func (a *Analyzer) generateRecommendations(projectInfo *models.ProjectInfo, vuln
 	return recommendations
 }
 
+// logAndPrint writes to both stdout and the log buffer
+func (a *Analyzer) logAndPrint(format string, args ...interface{}) {
+	message := fmt.Sprintf(format, args...)
+	fmt.Print(message)
+	if a.logBuffer != nil {
+		a.logBuffer.WriteString(message)
+	}
+}
+
 // Storage functions (in a real implementation, this would use a database)
 var analysisStore = make(map[string]*models.AnalysisResult)
+var analysisLogs = make(map[string]string)
 
 func StoreAnalysisResult(id string, result *models.AnalysisResult) {
 	analysisStore[id] = result
@@ -733,6 +752,15 @@ func StoreAnalysisResult(id string, result *models.AnalysisResult) {
 func GetAnalysisResult(id string) (*models.AnalysisResult, bool) {
 	result, exists := analysisStore[id]
 	return result, exists
+}
+
+func StoreAnalysisLogs(id string, logs string) {
+	analysisLogs[id] = logs
+}
+
+func GetAnalysisLogs(id string) (string, bool) {
+	logs, exists := analysisLogs[id]
+	return logs, exists
 }
 
 // contains checks if a string slice contains a specific string
