@@ -1,28 +1,32 @@
-import { motion } from 'framer-motion';
-import { useInView } from 'framer-motion';
-import { useRef } from 'react';
+import { motion } from "framer-motion";
+import { useInView } from "framer-motion";
+import { useRef } from "react";
 
 const services = [
   {
-    title: "Automated Threat Detection",
-    description: "Advanced AI-powered systems that detect and respond to threats in real-time, protecting your digital assets 24/7.",
-    category: "SECURITY"
+    title: "Continuous Threat Modeling",
+    description:
+      "Automatic threat maps update on every code push or config change—no manual upkeep.",
+    category: "CORE",
   },
   {
-    title: "Are you ready for NIS2?",
-    description: "Comprehensive compliance solutions to ensure your organization meets the new NIS2 directive requirements.",
-    category: "COMPLIANCE"
+    title: "AI Findings & Prioritization",
+    description:
+      "Maps risks to CVE and MITRE ATT&CK and ranks by impact with fixes.",
+    category: "AI",
   },
   {
-    title: "Offensive Security Assessment",
-    description: "Ethical hacking and penetration testing services to identify vulnerabilities before malicious actors do.",
-    category: "TESTING"
+    title: "Code & Cloud Analysis",
+    description:
+      "Parses endpoints, dependencies, IaC and cloud configs to reveal exploit paths.",
+    category: "ANALYSIS",
   },
   {
-    title: "Zero Trust Architecture",
-    description: "Implementation of zero trust security models that verify every user and device before granting access.",
-    category: "ARCHITECTURE"
-  }
+    title: "Interactive Attack Surface Map",
+    description:
+      "Visualize APIs, databases, services, and how threats can enter or move laterally.",
+    category: "VISUALIZATION",
+  },
 ];
 
 export function ServicesSection() {
@@ -38,17 +42,17 @@ export function ServicesSection() {
             key={i}
             className="absolute w-1 h-1 bg-primary rounded-full opacity-30"
             animate={{
-              x: ['-100vw', '100vw'],
-              y: [Math.random() * 100 + '%', Math.random() * 100 + '%'],
+              x: ["-100vw", "100vw"],
+              y: [Math.random() * 100 + "%", Math.random() * 100 + "%"],
             }}
             transition={{
               duration: 20 + Math.random() * 10,
               repeat: Infinity,
               delay: Math.random() * 10,
-              ease: "linear"
+              ease: "linear",
             }}
             style={{
-              top: Math.random() * 100 + '%',
+              top: Math.random() * 100 + "%",
             }}
           />
         ))}
@@ -65,7 +69,8 @@ export function ServicesSection() {
             Our Services
           </h2>
           <p className="text-xl text-foreground/80 max-w-3xl mx-auto">
-            Comprehensive cybersecurity solutions tailored to protect your digital infrastructure
+            Continuous, developer-first security that stays in lockstep with
+            your code and cloud
           </p>
         </motion.div>
 
@@ -83,12 +88,12 @@ export function ServicesSection() {
               <div className="text-primary font-mono text-xs mb-4 opacity-70">
                 {service.category}
               </div>
-              
+
               {/* Title */}
               <h3 className="text-xl font-bold mb-4 group-hover:cyber-text-glow transition-all duration-300">
                 {service.title}
               </h3>
-              
+
               {/* Description */}
               <p className="text-foreground/70 text-sm leading-relaxed">
                 {service.description}
@@ -97,15 +102,19 @@ export function ServicesSection() {
               {/* Animated border effect */}
               <motion.div
                 className="absolute inset-0 border border-primary/50 rounded-lg opacity-0 group-hover:opacity-100"
-                animate={isInView ? {
-                  borderImage: [
-                    'linear-gradient(0deg, #39ff14, transparent, transparent, transparent) 1',
-                    'linear-gradient(90deg, transparent, #39ff14, transparent, transparent) 1',
-                    'linear-gradient(180deg, transparent, transparent, #39ff14, transparent) 1',
-                    'linear-gradient(270deg, transparent, transparent, transparent, #39ff14) 1',
-                    'linear-gradient(360deg, #39ff14, transparent, transparent, transparent) 1'
-                  ]
-                } : {}}
+                animate={
+                  isInView
+                    ? {
+                        borderImage: [
+                          "linear-gradient(0deg, #39ff14, transparent, transparent, transparent) 1",
+                          "linear-gradient(90deg, transparent, #39ff14, transparent, transparent) 1",
+                          "linear-gradient(180deg, transparent, transparent, #39ff14, transparent) 1",
+                          "linear-gradient(270deg, transparent, transparent, transparent, #39ff14) 1",
+                          "linear-gradient(360deg, #39ff14, transparent, transparent, transparent) 1",
+                        ],
+                      }
+                    : {}
+                }
                 transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
               />
             </motion.div>
