@@ -32,7 +32,7 @@ export function ProductSection() {
           </h2>
         </motion.div>
 
-        {/* Holographic Face Scanner */}
+        {/* Threat Detection Interface */}
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={isInView ? { opacity: 1, scale: 1 } : {}}
@@ -40,82 +40,41 @@ export function ProductSection() {
           className="flex justify-center"
         >
           <div className="relative glassmorphism p-8 rounded-lg border border-primary/50 cyber-glow">
-            {/* Scanner frame */}
-            <div className="relative w-80 h-80 border-2 border-primary rounded-lg overflow-hidden">
+            {/* Threat scanner frame */}
+            <div className="relative w-96 h-96 border-2 border-primary rounded-lg overflow-hidden">
               {/* Scanning lines animation */}
               <motion.div
-                animate={{ y: [0, 320, 0] }}
+                animate={{ y: [0, 384, 0] }}
                 transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
                 className="absolute inset-x-0 h-1 bg-gradient-to-r from-transparent via-primary to-transparent opacity-80 z-20"
               />
 
-              {/* Face wireframe */}
+              {/* Threat visualization */}
               <div className="absolute inset-0 flex items-center justify-center">
                 <svg
                   viewBox="0 0 200 240"
-                  className="w-48 h-56 text-primary stroke-current opacity-70"
+                  className="w-72 h-80 text-primary stroke-current opacity-70"
                   fill="none"
                 >
-                  {/* Face outline */}
-                  <ellipse cx="100" cy="120" rx="60" ry="80" strokeWidth="1" />
-                  {/* Eyes */}
-                  <ellipse cx="85" cy="100" rx="8" ry="6" strokeWidth="1" />
-                  <ellipse cx="115" cy="100" rx="8" ry="6" strokeWidth="1" />
-                  {/* Nose */}
-                  <path
-                    d="M100 110 L100 125 M95 125 L105 125"
-                    strokeWidth="1"
+                  {/* Danger/Warning Triangle */}
+                  <path 
+                    d="M100 30 L170 190 L30 190 Z" 
+                    strokeWidth="4" 
+                    className="text-green-500"
+                    fill="none"
                   />
-                  {/* Mouth */}
-                  <path d="M90 140 Q100 150 110 140" strokeWidth="1" />
-                  {/* Grid lines */}
-                  <line
-                    x1="50"
-                    y1="80"
-                    x2="150"
-                    y2="80"
-                    strokeWidth="0.5"
-                    opacity="0.5"
-                  />
-                  <line
-                    x1="50"
-                    y1="120"
-                    x2="150"
-                    y2="120"
-                    strokeWidth="0.5"
-                    opacity="0.5"
-                  />
-                  <line
-                    x1="50"
-                    y1="160"
-                    x2="150"
-                    y2="160"
-                    strokeWidth="0.5"
-                    opacity="0.5"
-                  />
-                  <line
-                    x1="80"
-                    y1="50"
-                    x2="80"
-                    y2="190"
-                    strokeWidth="0.5"
-                    opacity="0.5"
-                  />
-                  <line
-                    x1="100"
-                    y1="50"
-                    x2="100"
-                    y2="190"
-                    strokeWidth="0.5"
-                    opacity="0.5"
-                  />
-                  <line
-                    x1="120"
-                    y1="50"
-                    x2="120"
-                    y2="190"
-                    strokeWidth="0.5"
-                    opacity="0.5"
+                  
+                  {/* Exclamation mark */}
+                  <circle cx="100" cy="150" r="12" fill="currentColor" className="text-green-500" />
+                  <rect x="94" y="120" width="12" height="30" fill="currentColor" className="text-green-500" />
+                  
+                  {/* Warning stripes inside triangle */}
+                  <path 
+                    d="M100 50 L150 170 L50 170 Z" 
+                    strokeWidth="1.5" 
+                    className="text-green-300"
+                    fill="none"
+                    strokeDasharray="8,4"
                   />
                 </svg>
               </div>
@@ -130,10 +89,10 @@ export function ProductSection() {
             {/* Info display */}
             <div className="mt-4 text-center">
               <div className="text-primary font-mono text-sm mb-2">
-                THREAT RECOGNITION
+                THREAT DETECTION ACTIVE
               </div>
               <div className="text-foreground/70 font-mono text-xs">
-                {new Date().toLocaleDateString()} - SYSTEM ACTIVE
+                {new Date().toLocaleDateString()} - VULNERABILITIES SCANNED
               </div>
             </div>
           </div>
