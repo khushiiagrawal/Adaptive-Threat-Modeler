@@ -3,8 +3,8 @@ import { Button } from "@/components/ui/button";
 
 const navItems = [
   { name: "Home", href: "#home" },
-  { name: "Services", href: "#services" },
   { name: "Product", href: "#product" },
+  { name: "Services", href: "#services" },
   { name: "About us", href: "#about" },
 ];
 
