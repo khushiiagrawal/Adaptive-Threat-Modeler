@@ -12,13 +12,15 @@ func main() {
 		repoPath   = flag.String("repo", "", "Path to git repository (default: current directory)")
 		commitHash = flag.String("commit", "", "Specific commit hash to analyze (default: latest)")
 		hookMode   = flag.Bool("hook", false, "Run in git hook mode")
+		apiMode    = flag.Bool("api", false, "Send analysis to API instead of just console output")
+		apiURL     = flag.String("api-url", "http://localhost:8080", "API base URL")
 	)
 	flag.Parse()
 
 	// Determine repository path
 	var gitRepoPath string
 	var err error
-	
+
 	if *repoPath != "" {
 		gitRepoPath = *repoPath
 	} else {
@@ -34,8 +36,14 @@ func main() {
 	if *hookMode {
 		// Run in hook mode - analyze latest commit
 		log.Println("🎯 Running git commit analysis hook...")
-		if err := gitService.OnCommitHook(); err != nil {
-			log.Fatalf("❌ Hook execution failed: %v", err)
+		if *apiMode {
+			if err := gitService.OnCommitHookWithAPI(*apiURL); err != nil {
+				log.Fatalf("❌ Hook execution failed: %v", err)
+			}
+		} else {
+			if err := gitService.OnCommitHook(); err != nil {
+				log.Fatalf("❌ Hook execution failed: %v", err)
+			}
 		}
 	} else if *commitHash != "" {
 		// Analyze specific commit

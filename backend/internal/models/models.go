@@ -12,11 +12,11 @@ type AnalysisRequest struct {
 
 // ProjectInfo contains detected project metadata
 type ProjectInfo struct {
-	Languages   []string          `json:"languages"`
-	Frameworks  []string          `json:"frameworks"`
-	Services    []ServiceInfo     `json:"services"`
+	Languages    []string          `json:"languages"`
+	Frameworks   []string          `json:"frameworks"`
+	Services     []ServiceInfo     `json:"services"`
 	Dependencies map[string]string `json:"dependencies"`
-	ConfigFiles []string          `json:"config_files"`
+	ConfigFiles  []string          `json:"config_files"`
 }
 
 // ServiceInfo represents a detected service/component
@@ -29,11 +29,11 @@ type ServiceInfo struct {
 
 // EndpointInfo represents an API endpoint
 type EndpointInfo struct {
-	Path     string   `json:"path"`
-	Method   string   `json:"method"`
-	Handler  string   `json:"handler"`
-	Params   []string `json:"params,omitempty"`
-	AuthReq  bool     `json:"auth_required"`
+	Path    string   `json:"path"`
+	Method  string   `json:"method"`
+	Handler string   `json:"handler"`
+	Params  []string `json:"params,omitempty"`
+	AuthReq bool     `json:"auth_required"`
 }
 
 // Vulnerability represents a security finding
@@ -75,20 +75,20 @@ type AutoFix struct {
 
 // ThreatMap represents the visual threat model
 type ThreatMap struct {
-	Components []Component  `json:"components"`
-	Flows      []DataFlow   `json:"flows"`
-	TrustZones []TrustZone  `json:"trust_zones"`
-	Assets     []Asset      `json:"assets"`
+	Components []Component `json:"components"`
+	Flows      []DataFlow  `json:"flows"`
+	TrustZones []TrustZone `json:"trust_zones"`
+	Assets     []Asset     `json:"assets"`
 }
 
 // Component represents a system component
 type Component struct {
-	ID          string            `json:"id"`
-	Name        string            `json:"name"`
-	Type        string            `json:"type"` // process, datastore, external_entity
-	TrustZone   string            `json:"trust_zone"`
-	Properties  map[string]string `json:"properties"`
-	Threats     []string          `json:"threats"` // vulnerability IDs
+	ID         string            `json:"id"`
+	Name       string            `json:"name"`
+	Type       string            `json:"type"` // process, datastore, external_entity
+	TrustZone  string            `json:"trust_zone"`
+	Properties map[string]string `json:"properties"`
+	Threats    []string          `json:"threats"` // vulnerability IDs
 }
 
 // DataFlow represents data movement between components
@@ -114,34 +114,58 @@ type TrustZone struct {
 
 // Asset represents a valuable resource
 type Asset struct {
-	ID           string   `json:"id"`
-	Name         string   `json:"name"`
-	Type         string   `json:"type"` // data, service, infrastructure
-	Sensitivity  string   `json:"sensitivity"` // public, internal, confidential, restricted
-	Components   []string `json:"components"` // component IDs that handle this asset
-	Threats      []string `json:"threats"`
+	ID          string   `json:"id"`
+	Name        string   `json:"name"`
+	Type        string   `json:"type"`        // data, service, infrastructure
+	Sensitivity string   `json:"sensitivity"` // public, internal, confidential, restricted
+	Components  []string `json:"components"`  // component IDs that handle this asset
+	Threats     []string `json:"threats"`
 }
 
 // AnalysisResult is the final response structure
 type AnalysisResult struct {
-	ID             string            `json:"id"`
-	Timestamp      time.Time         `json:"timestamp"`
-	ProjectInfo    ProjectInfo       `json:"project_info"`
-	Vulnerabilities []Vulnerability  `json:"vulnerabilities"`
-	ThreatMap      ThreatMap         `json:"threat_map"`
-	Summary        Summary           `json:"summary"`
-	Recommendations []string         `json:"recommendations"`
-	Status         string            `json:"status"`
-	ProcessingTime string            `json:"processing_time"`
+	ID              string          `json:"id"`
+	Timestamp       time.Time       `json:"timestamp"`
+	ProjectInfo     ProjectInfo     `json:"project_info"`
+	Vulnerabilities []Vulnerability `json:"vulnerabilities"`
+	ThreatMap       ThreatMap       `json:"threat_map"`
+	Summary         Summary         `json:"summary"`
+	Recommendations []string        `json:"recommendations"`
+	Status          string          `json:"status"`
+	ProcessingTime  string          `json:"processing_time"`
 }
 
 // Summary provides high-level statistics
 type Summary struct {
-	TotalVulnerabilities int                    `json:"total_vulnerabilities"`
-	SeverityBreakdown    map[string]int         `json:"severity_breakdown"`
-	CategoryBreakdown    map[string]int         `json:"category_breakdown"`
-	RiskScore           float64                 `json:"risk_score"`
-	SecurityPosture     string                  `json:"security_posture"` // excellent, good, fair, poor
-	TopRisks            []string                `json:"top_risks"`
+	TotalVulnerabilities int            `json:"total_vulnerabilities"`
+	SeverityBreakdown    map[string]int `json:"severity_breakdown"`
+	CategoryBreakdown    map[string]int `json:"category_breakdown"`
+	RiskScore            float64        `json:"risk_score"`
+	SecurityPosture      string         `json:"security_posture"` // excellent, good, fair, poor
+	TopRisks             []string       `json:"top_risks"`
 }
 
+// CommitAnalysisData represents the stored commit analysis data
+type CommitAnalysisData struct {
+	ID           string     `json:"id"`
+	Timestamp    time.Time  `json:"timestamp"`
+	CommitHash   string     `json:"commit_hash"`
+	Author       string     `json:"author"`
+	Email        string     `json:"email"`
+	Message      string     `json:"message"`
+	FilesChanged []string   `json:"files_changed"`
+	Additions    int        `json:"additions"`
+	Deletions    int        `json:"deletions"`
+	FileDiffs    []FileDiff `json:"file_diffs"`
+	FullDiff     string     `json:"full_diff"`
+}
+
+// FileDiff represents changes to a single file (moved from git_service.go for API use)
+type FileDiff struct {
+	FileName    string `json:"file_name"`
+	Status      string `json:"status"` // A (added), M (modified), D (deleted), R (renamed)
+	Additions   int    `json:"additions"`
+	Deletions   int    `json:"deletions"`
+	OldFileName string `json:"old_file_name,omitempty"` // For renamed files
+	Diff        string `json:"diff"`                    // The actual diff content for this file
+}
