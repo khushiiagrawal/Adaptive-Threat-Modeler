@@ -1,0 +1,171 @@
+# VULNERABILITY: Using 'latest' tag in production
+# This is an anti-pattern that leads to unpredictable deployments
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-with-latest-tag
+  namespace: production
+  labels:
+    app: app-with-latest-tag
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: app-with-latest-tag
+  template:
+    metadata:
+      labels:
+        app: app-with-latest-tag
+    spec:
+      containers:
+      - name: app
+        # VULNERABLE: Using 'latest' tag
+        image: myapp:latest  # VULNERABLE: Unpredictable image
+        ports:
+        - containerPort: 8080
+        # VULNERABLE: No image pull policy specified
+        # VULNERABLE: No resource limits
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "250m"
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        # VULNERABLE: No health checks
+        # VULNERABLE: No readiness probe
+        # VULNERABLE: No liveness probe
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: DATABASE_URL
+          value: "postgresql://admin:password@db:5432/prod"
+        # VULNERABLE: No image digest
+        # VULNERABLE: No version pinning
+        # VULNERABLE: No immutable tags
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-service
+  namespace: production
+spec:
+  selector:
+    app: app-with-latest-tag
+  ports:
+  - port: 80
+    targetPort: 8080
+  type: ClusterIP
+
+---
+# VULNERABLE: CronJob using latest tag
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: backup-job
+  namespace: production
+spec:
+  schedule: "0 2 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: backup
+            # VULNERABLE: Using latest tag in CronJob
+            image: backup-tool:latest  # VULNERABLE: Unpredictable image
+            command: ["/bin/bash", "-c", "backup.sh"]
+          # VULNERABLE: No restart policy
+          restartPolicy: OnFailure
+
+---
+# VULNERABLE: DaemonSet using latest tag
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: monitoring-agent
+  namespace: monitoring
+spec:
+  selector:
+    matchLabels:
+      app: monitoring-agent
+  template:
+    metadata:
+      labels:
+        app: monitoring-agent
+    spec:
+      containers:
+      - name: agent
+        # VULNERABLE: Using latest tag in DaemonSet
+        image: monitoring-agent:latest  # VULNERABLE: Unpredictable image
+        ports:
+        - containerPort: 9090
+
+---
+# VULNERABLE: StatefulSet using latest tag
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: database
+  namespace: production
+spec:
+  serviceName: database
+  replicas: 3
+  selector:
+    matchLabels:
+      app: database
+  template:
+    metadata:
+      labels:
+        app: database
+    spec:
+      containers:
+      - name: database
+        # VULNERABLE: Using latest tag in StatefulSet
+        image: postgres:latest  # VULNERABLE: Unpredictable image
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_PASSWORD
+          value: "password123"
+
+---
+# VULNERABLE: Job using latest tag
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: data-migration
+  namespace: production
+spec:
+  template:
+    spec:
+      containers:
+      - name: migration
+        # VULNERABLE: Using latest tag in Job
+        image: migration-tool:latest  # VULNERABLE: Unpredictable image
+        command: ["python", "migrate.py"]
+      restartPolicy: Never
+
+---
+# VULNERABLE: Pod using latest tag
+apiVersion: v1
+kind: Pod
+metadata:
+  name: debug-pod
+  namespace: production
+spec:
+  containers:
+  - name: debug
+    # VULNERABLE: Using latest tag in Pod
+    image: debug-tool:latest  # VULNERABLE: Unpredictable image
+    command: ["sleep", "3600"]
+
+# VULNERABLE: Problems with using 'latest' tag:
+# 1. Unpredictable deployments - image can change between pulls
+# 2. No rollback capability - can't easily revert to previous version
+# 3. Security risks - latest might contain vulnerabilities
+# 4. Reproducibility issues - can't reproduce exact deployment
+# 5. Compliance issues - can't track what's deployed
+# 6. Testing problems - can't test exact image before deployment
