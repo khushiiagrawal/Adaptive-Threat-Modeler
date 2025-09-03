@@ -16,7 +16,7 @@ func InitializeCommitStorage(storagePath string) {
 	commitStorage = services.NewCommitStorageService(storagePath)
 }
 
-// GetLatestCommitAnalysis returns the most recent commit analysis data
+// GetLatestCommitAnalysis returns the most recent commit analysis data (simplified version)
 func GetLatestCommitAnalysis(c *fiber.Ctx) error {
 	if commitStorage == nil {
 		return c.Status(500).JSON(fiber.Map{
@@ -33,9 +33,22 @@ func GetLatestCommitAnalysis(c *fiber.Ctx) error {
 		})
 	}
 
+	// Convert to simplified version without file diffs and full diff
+	simplifiedData := &models.SimplifiedCommitData{
+		ID:           analysis.ID,
+		Timestamp:    analysis.Timestamp,
+		CommitHash:   analysis.CommitHash,
+		Author:       analysis.Author,
+		Email:        analysis.Email,
+		Message:      analysis.Message,
+		Additions:    analysis.Additions,
+		Deletions:    analysis.Deletions,
+		FilesChanged: analysis.FilesChanged,
+	}
+
 	return c.JSON(fiber.Map{
 		"success": true,
-		"data":    analysis,
+		"data":    simplifiedData,
 	})
 }
 

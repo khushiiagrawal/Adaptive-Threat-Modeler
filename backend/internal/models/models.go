@@ -169,3 +169,16 @@ type FileDiff struct {
 	OldFileName string `json:"old_file_name,omitempty"` // For renamed files
 	Diff        string `json:"diff"`                    // The actual diff content for this file
 }
+
+// SimplifiedCommitData represents a simplified version of commit data without detailed diffs
+type SimplifiedCommitData struct {
+	ID           string    `json:"id"`
+	Timestamp    time.Time `json:"timestamp"`
+	CommitHash   string    `json:"commit_hash"`
+	Author       string    `json:"author"`
+	Email        string    `json:"email"`
+	Message      string    `json:"message"`
+	Additions    int       `json:"additions"`
+	Deletions    int       `json:"deletions"`
+	FilesChanged []string  `json:"files_changed"`
+}
