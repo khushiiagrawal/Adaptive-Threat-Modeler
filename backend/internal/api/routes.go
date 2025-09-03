@@ -14,6 +14,7 @@ func SetupRoutes(app *fiber.App) {
 	// Analysis endpoints
 	api.Post("/analyze/github", handlers.AnalyzeGitHubRepo)
 	api.Post("/analyze/upload", handlers.AnalyzeUpload)
+	api.Post("/analyze/commit", handlers.AnalyzeGitCommit)
 	api.Get("/analysis/:id", handlers.GetAnalysisResult)
 	api.Get("/analysis/:id/status", handlers.GetAnalysisStatus)
 
