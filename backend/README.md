@@ -297,5 +297,3 @@ go build -o adaptive-threat-modeler .
 ## License
 
 [License information here]
-
-This prompt will instruct the Cursor agent to use the GitHub MCP server to review your staged file changes, summarize those differences, and recommend an appropriate commit message. If the MCP server is set up as described (using a Docker command with your GitHub token or through .cursor/mcp.json), Cursor will utilize its available MCP tools to perform the analysis and present the results within the IDE
