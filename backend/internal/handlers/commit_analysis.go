@@ -33,9 +33,23 @@ func GetLatestCommitAnalysis(c *fiber.Ctx) error {
 		})
 	}
 
+	// Convert to simplified version without file diffs and full diff
+	simplifiedData := &models.SimplifiedCommitData{
+		ID:           analysis.ID,
+		Timestamp:    analysis.Timestamp,
+		CommitHash:   analysis.CommitHash,
+		Author:       analysis.Author,
+		Email:        analysis.Email,
+		Message:      analysis.Message,
+		Additions:    analysis.Additions,
+		Deletions:    analysis.Deletions,
+		FilesChanged: analysis.FilesChanged,
+		FileDiffs:    analysis.FileDiffs,
+	}
+
 	return c.JSON(fiber.Map{
 		"success": true,
-		"data":    analysis,
+		"data":    simplifiedData,
 	})
 }
 

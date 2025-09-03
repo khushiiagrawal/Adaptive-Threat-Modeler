@@ -160,6 +160,20 @@ type CommitAnalysisData struct {
 	FullDiff     string     `json:"full_diff"`
 }
 
+// SimplifiedCommitData represents a simplified version of commit data without detailed diffs
+type SimplifiedCommitData struct {
+	ID           string     `json:"id"`
+	Timestamp    time.Time  `json:"timestamp"`
+	CommitHash   string     `json:"commit_hash"`
+	Author       string     `json:"author"`
+	Email        string     `json:"email"`
+	Message      string     `json:"message"`
+	Additions    int        `json:"additions"`
+	Deletions    int        `json:"deletions"`
+	FilesChanged []string   `json:"files_changed"`
+	FileDiffs    []FileDiff `json:"file_diffs"`
+}
+
 // FileDiff represents changes to a single file (moved from git_service.go for API use)
 type FileDiff struct {
 	FileName    string `json:"file_name"`
