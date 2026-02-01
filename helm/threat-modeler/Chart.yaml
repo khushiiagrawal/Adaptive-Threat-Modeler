@@ -1,0 +1,21 @@
+apiVersion: v2
+name: threat-modeler
+description: A Helm chart for Adaptive Threat Modeler - AI-powered security analysis platform
+type: application
+
+# Chart version (change this when you update the chart)
+version: 0.1.0
+
+# App version (your application version)
+appVersion: "1.0.0"
+
+maintainers:
+  - name: Khushi Agrawal
+    
+keywords:
+  - security
+  - threat-modeling
+  - vulnerability-detection
+  - ai
+
+home: https://github.com/khushiagrawal/Adaptive-Threat-Modeler

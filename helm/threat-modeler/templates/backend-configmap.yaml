@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "threat-modeler.backend.labels" . | nindent 4 }}
+data:
+  PORT: {{ .Values.backend.config.port | quote }}
+  MAX_FILE_SIZE: {{ .Values.backend.config.maxFileSize | quote }}
+  ENABLE_DATAFLOW_ANALYSIS: {{ .Values.backend.config.enableDataflowAnalysis | quote }}
+  LOG_LEVEL: {{ .Values.backend.config.logLevel | quote }}
