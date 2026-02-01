@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "threat-modeler.labels" . | nindent 4 }}
+data:
+  dashboard.json: {{ .Files.Get "files/grafana-dashboard.json" | quote }}
