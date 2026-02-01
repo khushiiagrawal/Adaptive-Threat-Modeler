@@ -16,16 +16,17 @@ import (
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/google/uuid"
 
+	"adaptive-threat-modeler/internal/metrics"
 	"adaptive-threat-modeler/internal/models"
 )
 
 type Analyzer struct {
-	tempDir       string
-	detector      *ProjectDetector
-	ruleEngine    *RuleEngine
-	astParser     *ASTParser
-	resultStore   map[string]*models.AnalysisResult
-	logBuffer     *bytes.Buffer
+	tempDir     string
+	detector    *ProjectDetector
+	ruleEngine  *RuleEngine
+	astParser   *ASTParser
+	resultStore map[string]*models.AnalysisResult
+	logBuffer   *bytes.Buffer
 }
 
 // NewAnalyzer creates a new analyzer instance
@@ -44,27 +45,45 @@ func NewAnalyzer() *Analyzer {
 func (a *Analyzer) AnalyzeGitHubRepo(analysisID, repoURL, branch string) (*models.AnalysisResult, error) {
 	startTime := time.Now()
 
+	// Track analysis in progress
+	metrics.AnalysisInProgress.Inc()
+	defer metrics.AnalysisInProgress.Dec()
+
 	// Create temporary directory for this analysis
 	tempDir := filepath.Join(a.tempDir, "analysis_"+analysisID)
 	if err := os.MkdirAll(tempDir, 0755); err != nil {
+		metrics.RecordError("temp_dir_creation", "analyzer")
 		return nil, fmt.Errorf("failed to create temp directory: %w", err)
 	}
 	defer os.RemoveAll(tempDir)
 
 	// Clone repository
 	repoPath := filepath.Join(tempDir, "repo")
+	cloneStart := time.Now()
 	if err := a.cloneRepository(repoURL, repoPath, branch); err != nil {
+		metrics.RecordRepositoryClone(time.Since(cloneStart), 0, false)
+		metrics.RecordError("git_clone", "analyzer")
 		return nil, fmt.Errorf("failed to clone repository: %w", err)
 	}
+
+	// Calculate repository size
+	repoSize := calculateDirSize(repoPath)
+	metrics.RecordRepositoryClone(time.Since(cloneStart), repoSize, true)
 
 	// Perform analysis
 	result, err := a.analyzeProject(analysisID, repoPath)
 	if err != nil {
+		metrics.RecordAnalysis("github", time.Since(startTime), "failed", 0, nil)
+		metrics.RecordError("analysis", "analyzer")
 		return nil, fmt.Errorf("analysis failed: %w", err)
 	}
 
 	result.ProcessingTime = time.Since(startTime).String()
 	result.Status = "completed"
+
+	// Record successful analysis metrics
+	vulnsBySeverity := countVulnerabilitiesBySeverity(result.Vulnerabilities)
+	metrics.RecordAnalysis("github", time.Since(startTime), "completed", len(result.Vulnerabilities), vulnsBySeverity)
 
 	return result, nil
 }
@@ -73,9 +92,14 @@ func (a *Analyzer) AnalyzeGitHubRepo(analysisID, repoURL, branch string) (*model
 func (a *Analyzer) AnalyzeUpload(analysisID string, file *multipart.FileHeader) (*models.AnalysisResult, error) {
 	startTime := time.Now()
 
+	// Track analysis in progress
+	metrics.AnalysisInProgress.Inc()
+	defer metrics.AnalysisInProgress.Dec()
+
 	// Create temporary directory for this analysis
 	tempDir := filepath.Join(a.tempDir, "analysis_"+analysisID)
 	if err := os.MkdirAll(tempDir, 0755); err != nil {
+		metrics.RecordError("temp_dir_creation", "analyzer")
 		return nil, fmt.Errorf("failed to create temp directory: %w", err)
 	}
 	defer os.RemoveAll(tempDir)
@@ -83,17 +107,25 @@ func (a *Analyzer) AnalyzeUpload(analysisID string, file *multipart.FileHeader) 
 	// Extract zip file
 	projectPath := filepath.Join(tempDir, "project")
 	if err := a.extractZipFile(file, projectPath); err != nil {
+		metrics.RecordError("zip_extraction", "analyzer")
+		metrics.RecordAnalysis("upload", time.Since(startTime), "failed", 0, nil)
 		return nil, fmt.Errorf("failed to extract zip file: %w", err)
 	}
 
 	// Perform analysis
 	result, err := a.analyzeProject(analysisID, projectPath)
 	if err != nil {
+		metrics.RecordAnalysis("upload", time.Since(startTime), "failed", 0, nil)
+		metrics.RecordError("analysis", "analyzer")
 		return nil, fmt.Errorf("analysis failed: %w", err)
 	}
 
 	result.ProcessingTime = time.Since(startTime).String()
 	result.Status = "completed"
+
+	// Record successful analysis metrics
+	vulnsBySeverity := countVulnerabilitiesBySeverity(result.Vulnerabilities)
+	metrics.RecordAnalysis("upload", time.Since(startTime), "completed", len(result.Vulnerabilities), vulnsBySeverity)
 
 	return result, nil
 }
@@ -107,7 +139,7 @@ func (a *Analyzer) cloneRepository(repoURL, path, branch string) error {
 	}
 
 	if branch != "" {
-cloneOptions.ReferenceName = plumbing.ReferenceName("refs/heads/" + branch)
+		cloneOptions.ReferenceName = plumbing.ReferenceName("refs/heads/" + branch)
 		cloneOptions.SingleBranch = true
 	}
 
@@ -217,10 +249,10 @@ func (a *Analyzer) analyzeProject(analysisID, projectPath string) (*models.Analy
 		return nil, fmt.Errorf("project detection failed: %w", err)
 	}
 	result.ProjectInfo = *projectInfo
-	
+
 	// Reset log buffer for new analysis
 	a.logBuffer.Reset()
-	
+
 	// Log project information
 	a.logAndPrint("\n=== PROJECT ANALYSIS STARTED ===\n")
 	a.logAndPrint("Analysis ID: %s\n", analysisID)
@@ -246,7 +278,7 @@ func (a *Analyzer) analyzeProject(analysisID, projectPath string) (*models.Analy
 	a.logAndPrint("\n=== ANALYSIS COMPLETED ===\n")
 	a.logAndPrint("Analysis ID: %s\n", analysisID)
 	a.logAndPrint("Total vulnerabilities found: %d\n", len(vulnerabilities))
-	
+
 	// Create AST-style output
 	astOutput := map[string]interface{}{
 		"results": []map[string]interface{}{},
@@ -257,11 +289,11 @@ func (a *Analyzer) analyzeProject(analysisID, projectPath string) (*models.Analy
 		},
 		"version": "1.0.0",
 	}
-	
+
 	// Convert vulnerabilities to AST format
 	var results []map[string]interface{}
 	var scannedPaths []string
-	
+
 	for _, vuln := range vulnerabilities {
 		result := map[string]interface{}{
 			"check_id": vuln.ID,
@@ -277,51 +309,51 @@ func (a *Analyzer) analyzeProject(analysisID, projectPath string) (*models.Analy
 				"offset": 0,
 			},
 			"extra": map[string]interface{}{
-				"message":  vuln.Description,
-				"severity": strings.ToUpper(vuln.Severity),
-				"category": vuln.Category,
-				"cwe":      vuln.CWE,
-				"owasp":    vuln.OWASP,
-				"evidence": vuln.Evidence,
-				"impact":   vuln.Impact,
+				"message":     vuln.Description,
+				"severity":    strings.ToUpper(vuln.Severity),
+				"category":    vuln.Category,
+				"cwe":         vuln.CWE,
+				"owasp":       vuln.OWASP,
+				"evidence":    vuln.Evidence,
+				"impact":      vuln.Impact,
 				"remediation": vuln.Remediation,
 			},
 		}
-		
+
 		// Add autofix if available
 		if vuln.AutoFix != nil {
 			result["extra"].(map[string]interface{})["fix"] = vuln.AutoFix.NewCode
 			result["extra"].(map[string]interface{})["fix_confidence"] = vuln.AutoFix.Confidence
 		}
-		
+
 		results = append(results, result)
-		
+
 		// Track scanned files
 		if !contains(scannedPaths, vuln.Location.File) {
 			scannedPaths = append(scannedPaths, vuln.Location.File)
 		}
 	}
-	
+
 	astOutput["results"] = results
 	astOutput["paths"].(map[string]interface{})["scanned"] = scannedPaths
-	
+
 	// Pretty print JSON
 	jsonBytes, err := json.MarshalIndent(astOutput, "", "  ")
 	if err == nil {
 		a.logAndPrint("\n=== AST-STYLE JSON OUTPUT ===\n")
 		a.logAndPrint("%s\n", string(jsonBytes))
 	}
-	
+
 	// Also print summary for convenience
 	if len(vulnerabilities) > 0 {
 		a.logAndPrint("\n=== VULNERABILITY SUMMARY ===\n")
-		
+
 		// Group vulnerabilities by severity
 		severityGroups := make(map[string][]models.Vulnerability)
 		for _, vuln := range vulnerabilities {
 			severityGroups[vuln.Severity] = append(severityGroups[vuln.Severity], vuln)
 		}
-		
+
 		// Print by severity (critical first)
 		severityOrder := []string{"critical", "high", "medium", "low", "info"}
 		for _, severity := range severityOrder {
@@ -330,7 +362,7 @@ func (a *Analyzer) analyzeProject(analysisID, projectPath string) (*models.Analy
 			}
 		}
 	}
-	
+
 	a.logAndPrint("\n=== ANALYSIS SUMMARY ===\n")
 
 	// Generate threat map
@@ -340,7 +372,7 @@ func (a *Analyzer) analyzeProject(analysisID, projectPath string) (*models.Analy
 	// Calculate summary and recommendations
 	result.Summary = a.calculateSummary(vulnerabilities)
 	result.Recommendations = a.generateRecommendations(projectInfo, vulnerabilities)
-	
+
 	// Log final summary
 	a.logAndPrint("Risk Score: %.1f\n", result.Summary.RiskScore)
 	a.logAndPrint("Security Posture: %s\n", result.Summary.SecurityPosture)
@@ -382,14 +414,14 @@ func (a *Analyzer) analyzeSourceFiles(projectPath string, projectInfo *models.Pr
 		if info.IsDir() {
 			return nil
 		}
-		
+
 		// Skip unwanted files (metadata, binaries, etc.)
 		relPath, _ := filepath.Rel(projectPath, path)
 		if a.shouldSkipFile(relPath) {
 			a.logAndPrint("Skipping unwanted file: %s\n", relPath)
 			return nil
 		}
-		
+
 		// Skip non-source files
 		if !a.isSourceFile(path, projectInfo.Languages) {
 			return nil
@@ -399,9 +431,9 @@ func (a *Analyzer) analyzeSourceFiles(projectPath string, projectInfo *models.Pr
 		fileVulns, err := a.analyzeFile(path, projectPath, rules)
 		if err != nil {
 			// Check if it's a binary file or parsing error
-			if strings.Contains(err.Error(), "illegal character NUL") || 
-			   strings.Contains(err.Error(), "invalid UTF-8") ||
-			   strings.Contains(err.Error(), "binary file detected") {
+			if strings.Contains(err.Error(), "illegal character NUL") ||
+				strings.Contains(err.Error(), "invalid UTF-8") ||
+				strings.Contains(err.Error(), "binary file detected") {
 				// Skip binary files silently
 				a.logAndPrint("Skipping binary file: %s\n", relPath)
 				return nil
@@ -434,7 +466,7 @@ func (a *Analyzer) analyzeFile(filePath, projectRoot string, rules []SecurityRul
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Check if file is binary (contains null bytes in first 512 bytes)
 	if a.isBinaryFile(content) {
 		return nil, fmt.Errorf("binary file detected, skipping")
@@ -480,7 +512,14 @@ func (a *Analyzer) analyzeFile(filePath, projectRoot string, rules []SecurityRul
 				}
 
 				vulnerabilities = append(vulnerabilities, vuln)
+
+				// Record vulnerability metrics
+				language := detectFileLanguage(filePath)
+				framework := detectFileFramework(filePath, ast)
+				metrics.RecordVulnerability(vuln.Severity, vuln.Category, language, framework)
 			}
+			// Note: Rule execution timing is per-rule-set, not individual rules
+			metrics.RecordRuleExecution(rule.Category, rule.ID, time.Duration(0), len(matches) > 0)
 		}
 	}
 
@@ -490,7 +529,7 @@ func (a *Analyzer) analyzeFile(filePath, projectRoot string, rules []SecurityRul
 // isSourceFile checks if a file is a source code file
 func (a *Analyzer) isSourceFile(filePath string, languages []string) bool {
 	ext := strings.ToLower(filepath.Ext(filePath))
-	
+
 	// Common source file extensions
 	sourceExts := map[string][]string{
 		"go":         {".go"},
@@ -526,18 +565,18 @@ func (a *Analyzer) shouldSkipFile(filePath string) bool {
 	if strings.Contains(filePath, "__MACOSX/") {
 		return true
 	}
-	
+
 	// Skip macOS resource fork files (._filename)
 	fileName := filepath.Base(filePath)
 	if strings.HasPrefix(fileName, "._") {
 		return true
 	}
-	
+
 	// Skip hidden files and directories
 	if strings.HasPrefix(fileName, ".") && fileName != ".env" && fileName != ".gitignore" {
 		return true
 	}
-	
+
 	// Skip common binary/build artifacts
 	skipPatterns := []string{
 		".DS_Store",
@@ -591,14 +630,14 @@ func (a *Analyzer) shouldSkipFile(filePath string) bool {
 		"*.wmv",
 		"*.flv",
 	}
-	
+
 	lowerPath := strings.ToLower(filePath)
 	for _, pattern := range skipPatterns {
 		if strings.Contains(lowerPath, strings.ToLower(pattern)) {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -609,13 +648,13 @@ func (a *Analyzer) isBinaryFile(content []byte) bool {
 	if len(content) < checkLength {
 		checkLength = len(content)
 	}
-	
+
 	for i := 0; i < checkLength; i++ {
 		if content[i] == 0 {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -675,7 +714,7 @@ func (a *Analyzer) calculateSummary(vulnerabilities []models.Vulnerability) mode
 		TotalVulnerabilities: len(vulnerabilities),
 		SeverityBreakdown:    make(map[string]int),
 		CategoryBreakdown:    make(map[string]int),
-		TopRisks:            []string{},
+		TopRisks:             []string{},
 	}
 
 	// Calculate breakdowns
@@ -773,3 +812,52 @@ func contains(slice []string, item string) bool {
 	return false
 }
 
+// Helper functions for metrics
+
+func calculateDirSize(path string) int64 {
+	var size int64
+	filepath.Walk(path, func(_ string, info os.FileInfo, err error) error {
+		if err == nil && !info.IsDir() {
+			size += info.Size()
+		}
+		return nil
+	})
+	return size
+}
+
+func countVulnerabilitiesBySeverity(vulnerabilities []models.Vulnerability) map[string]int {
+	counts := make(map[string]int)
+	for _, vuln := range vulnerabilities {
+		counts[vuln.Severity]++
+	}
+	return counts
+}
+
+func detectFileLanguage(filePath string) string {
+	ext := strings.ToLower(filepath.Ext(filePath))
+	langMap := map[string]string{
+		".go":   "go",
+		".js":   "javascript",
+		".jsx":  "javascript",
+		".ts":   "typescript",
+		".tsx":  "typescript",
+		".py":   "python",
+		".tf":   "hcl",
+		".java": "java",
+		".php":  "php",
+		".rb":   "ruby",
+		".cs":   "csharp",
+		".cpp":  "cpp",
+		".rs":   "rust",
+	}
+	if lang, ok := langMap[ext]; ok {
+		return lang
+	}
+	return "unknown"
+}
+
+func detectFileFramework(filePath string, ast interface{}) string {
+	// Simple framework detection based on file content patterns
+	// This could be enhanced with more sophisticated detection
+	return ""
+}

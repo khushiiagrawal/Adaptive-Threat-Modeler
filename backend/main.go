@@ -4,14 +4,17 @@ import (
 	"log"
 	"path/filepath"
 
+	"github.com/gofiber/adaptor/v2"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"adaptive-threat-modeler/internal/api"
 	"adaptive-threat-modeler/internal/config"
 	"adaptive-threat-modeler/internal/handlers"
+	"adaptive-threat-modeler/internal/metrics"
 )
 
 func main() {
@@ -43,6 +46,10 @@ func main() {
 		ExposeHeaders:    "Content-Length",
 		MaxAge:           300,
 	}))
+	app.Use(metrics.PrometheusMiddleware())
+
+	// Initialize metrics collectors
+	metrics.RegisterCustomCollectors()
 
 	// Initialize commit storage
 	storagePath := filepath.Join(".", "data", "commits")
@@ -55,6 +62,9 @@ func main() {
 			"service": "adaptive-threat-modeler",
 		})
 	})
+
+	// Prometheus metrics endpoint
+	app.Get("/metrics", adaptor.HTTPHandler(promhttp.Handler()))
 
 	// API routes
 	api.SetupRoutes(app)

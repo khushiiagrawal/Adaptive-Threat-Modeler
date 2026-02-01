@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strings"
 
+	"adaptive-threat-modeler/internal/metrics"
 	"adaptive-threat-modeler/internal/models"
 )
 
@@ -17,11 +18,11 @@ type ProjectDetector struct {
 }
 
 type FrameworkPattern struct {
-	Files        []string            `json:"files"`
-	Dependencies []string            `json:"dependencies"`
-	Patterns     []string            `json:"patterns"`
-	Language     string              `json:"language"`
-	Metadata     map[string]string   `json:"metadata"`
+	Files        []string          `json:"files"`
+	Dependencies []string          `json:"dependencies"`
+	Patterns     []string          `json:"patterns"`
+	Language     string            `json:"language"`
+	Metadata     map[string]string `json:"metadata"`
 }
 
 // NewProjectDetector creates a new project detector instance
@@ -231,6 +232,7 @@ func (pd *ProjectDetector) DetectLanguages(projectPath string, files []string) (
 	for lang := range languageCount {
 		if languageCount[lang] > 0 {
 			languages = append(languages, lang)
+			metrics.RecordLanguageDetection(lang)
 		}
 	}
 
@@ -254,6 +256,7 @@ func (pd *ProjectDetector) DetectFrameworks(projectPath string, languages []stri
 
 		if detected {
 			frameworks = append(frameworks, frameworkName)
+			metrics.RecordFrameworkDetection(frameworkName)
 		}
 	}
 
@@ -324,7 +327,7 @@ func (pd *ProjectDetector) FindConfigFiles(projectPath string) ([]string, error)
 		}
 
 		relPath, _ := filepath.Rel(projectPath, path)
-		
+
 		// Check for common config file patterns
 		if pd.isConfigFile(info.Name()) {
 			configFiles = append(configFiles, relPath)
@@ -340,7 +343,7 @@ func (pd *ProjectDetector) FindConfigFiles(projectPath string) ([]string, error)
 
 func (pd *ProjectDetector) detectLanguageByExtension(filename string) string {
 	ext := strings.ToLower(filepath.Ext(filename))
-	
+
 	extensionMap := map[string]string{
 		".go":   "go",
 		".js":   "javascript",
@@ -543,15 +546,15 @@ func (pd *ProjectDetector) analyzeFiberEndpoints(projectPath string) ([]models.E
 		for _, pattern := range routePatterns {
 			re := regexp.MustCompile(pattern)
 			matches := re.FindAllStringSubmatch(string(content), -1)
-			
+
 			for _, match := range matches {
 				if len(match) > 1 {
 					method := strings.ToUpper(strings.Split(pattern, `\.`)[1][:strings.Index(strings.Split(pattern, `\.`)[1], `\(`)])
 					endpoint := models.EndpointInfo{
-						Path:     match[1],
-						Method:   method,
-						Handler:  "handler_" + strings.ReplaceAll(match[1], "/", "_"),
-						AuthReq:  false, // Would need more sophisticated analysis
+						Path:    match[1],
+						Method:  method,
+						Handler: "handler_" + strings.ReplaceAll(match[1], "/", "_"),
+						AuthReq: false, // Would need more sophisticated analysis
 					}
 					endpoints = append(endpoints, endpoint)
 				}
@@ -590,18 +593,18 @@ func (pd *ProjectDetector) analyzeExpressEndpoints(projectPath string) ([]models
 		for _, pattern := range routePatterns {
 			re := regexp.MustCompile(pattern)
 			matches := re.FindAllStringSubmatch(string(content), -1)
-			
+
 			for _, match := range matches {
 				if len(match) > 1 {
 					methodStart := strings.Index(pattern, `\.`) + 1
 					methodEnd := strings.Index(pattern[methodStart:], `\(`)
 					method := strings.ToUpper(pattern[methodStart : methodStart+methodEnd])
-					
+
 					endpoint := models.EndpointInfo{
-						Path:     match[1],
-						Method:   method,
-						Handler:  "handler_" + strings.ReplaceAll(match[1], "/", "_"),
-						AuthReq:  false,
+						Path:    match[1],
+						Method:  method,
+						Handler: "handler_" + strings.ReplaceAll(match[1], "/", "_"),
+						AuthReq: false,
 					}
 					endpoints = append(endpoints, endpoint)
 				}
@@ -616,7 +619,7 @@ func (pd *ProjectDetector) analyzeExpressEndpoints(projectPath string) ([]models
 
 func (pd *ProjectDetector) parseGoModDependencies(projectPath string) (map[string]string, error) {
 	dependencies := make(map[string]string)
-	
+
 	goModPath := filepath.Join(projectPath, "go.mod")
 	content, err := os.ReadFile(goModPath)
 	if err != nil {
@@ -626,20 +629,20 @@ func (pd *ProjectDetector) parseGoModDependencies(projectPath string) (map[strin
 	// Simple go.mod parsing (would use proper parser in production)
 	lines := strings.Split(string(content), "\n")
 	inRequire := false
-	
+
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
-		
+
 		if strings.HasPrefix(line, "require (") {
 			inRequire = true
 			continue
 		}
-		
+
 		if inRequire && line == ")" {
 			inRequire = false
 			continue
 		}
-		
+
 		if inRequire || strings.HasPrefix(line, "require ") {
 			// Parse dependency line
 			parts := strings.Fields(line)
@@ -660,7 +663,7 @@ func (pd *ProjectDetector) parseGoModDependencies(projectPath string) (map[strin
 
 func (pd *ProjectDetector) parsePackageJsonDependencies(projectPath string) (map[string]string, error) {
 	dependencies := make(map[string]string)
-	
+
 	packageJsonPath := filepath.Join(projectPath, "package.json")
 	content, err := os.ReadFile(packageJsonPath)
 	if err != nil {
@@ -695,7 +698,7 @@ func (pd *ProjectDetector) parsePackageJsonDependencies(projectPath string) (map
 
 func (pd *ProjectDetector) parsePythonDependencies(projectPath string) (map[string]string, error) {
 	dependencies := make(map[string]string)
-	
+
 	// Try requirements.txt first
 	reqPath := filepath.Join(projectPath, "requirements.txt")
 	if content, err := os.ReadFile(reqPath); err == nil {
@@ -705,7 +708,7 @@ func (pd *ProjectDetector) parsePythonDependencies(projectPath string) (map[stri
 			if line == "" || strings.HasPrefix(line, "#") {
 				continue
 			}
-			
+
 			// Parse requirement line (package==version or package>=version)
 			for _, sep := range []string{"==", ">=", "<=", ">", "<", "~="} {
 				if strings.Contains(line, sep) {
@@ -755,4 +758,3 @@ func detectorContains(slice []string, item string) bool {
 	}
 	return false
 }
-
