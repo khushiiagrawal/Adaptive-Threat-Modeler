@@ -1,0 +1,8 @@
+# Namespace for all Adaptive Threat Modeler resources
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: threat-modeler
+  labels:
+    app: threat-modeler
+    project: adaptive-threat-modeler
