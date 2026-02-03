@@ -7,14 +7,18 @@ metadata:
   labels:
     app: threat-modeler
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
+    # Allow large file uploads (100MB for zip files)
+    nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+    # Increase timeouts for long-running analysis
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
 spec:
   ingressClassName: nginx
   rules:
   - host: threat-modeler.local
     http:
       paths:
-      # API routes go to backend
+      # API routes go to backend (more specific paths first)
       - path: /api
         pathType: Prefix
         backend:

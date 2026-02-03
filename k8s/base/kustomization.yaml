@@ -1,4 +1,7 @@
 # Kustomization file - apply all resources in order
+# NOTE: For simple deployments, you can skip kustomize and use:
+#       kubectl apply -f k8s/base/
+# Kustomize is more useful when you have multiple environments (dev/staging/prod)
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 

@@ -16,16 +16,10 @@ fi
 echo "🔌 Enabling ingress addon..."
 minikube addons enable ingress
 
-# Switch to minikube's Docker daemon
-echo "🐳 Configuring Docker to use minikube..."
-eval $(minikube docker-env)
-
-# Build Docker images
-echo "🔨 Building backend image..."
-docker build -t threat-modeler-backend:latest ./backend
-
-echo "🔨 Building frontend image..."
-docker build -t threat-modeler-frontend:latest ./frontend
+# Note: Images will be pulled from Docker Hub
+echo "📦 Using images from Docker Hub:"
+echo "   - khushiiagrawal/threat-modeler-backend:v1.0.0"
+echo "   - khushiiagrawal/threat-modeler-frontend:v1.0.0"
 
 # Deploy with Helm
 echo "⎈ Deploying with Helm..."

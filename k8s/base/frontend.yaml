@@ -18,8 +18,9 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: threat-modeler-frontend:latest
-        imagePullPolicy: IfNotPresent
+        # Docker Hub image - publicly accessible
+        image: khushiiagrawal/threat-modeler-frontend:v1.0.3
+        imagePullPolicy: Always
         ports:
         - containerPort: 80
           name: http

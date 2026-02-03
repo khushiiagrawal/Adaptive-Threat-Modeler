@@ -12,9 +12,9 @@ backend:
   replicaCount: 1
   
   image:
-    repository: threat-modeler-backend
-    tag: latest
-    pullPolicy: IfNotPresent
+    repository: khushiiagrawal/threat-modeler-backend
+    tag: v1.0.0
+    pullPolicy: Always
   
   # Resource limits
   resources:
@@ -42,9 +42,9 @@ frontend:
   replicaCount: 2
   
   image:
-    repository: threat-modeler-frontend
-    tag: latest
-    pullPolicy: IfNotPresent
+    repository: khushiiagrawal/threat-modeler-frontend
+    tag: v1.0.3
+    pullPolicy: Always
   
   resources:
     requests:

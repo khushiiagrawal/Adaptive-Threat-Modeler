@@ -18,9 +18,9 @@ spec:
     spec:
       containers:
       - name: backend
-        image: threat-modeler-backend:latest
-        # For local development, use imagePullPolicy: Never with minikube
-        imagePullPolicy: IfNotPresent
+        # Docker Hub image - publicly accessible
+        image: khushiiagrawal/threat-modeler-backend:v1.0.0
+        imagePullPolicy: Always
         ports:
         - containerPort: 8080
           name: http

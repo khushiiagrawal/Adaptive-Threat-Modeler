@@ -1,155 +1,229 @@
 # Adaptive Threat Modeler
 
-
-A powerful security analysis tool that scans codebases for vulnerabilities, generates visual threat maps, and provides actionable remediation steps. Simply point it at a GitHub repository or upload a ZIP file to get started.
-
----
-
-## 📖 Table of Contents
-
-- [Key Features](#-key-features)
-- [Quick Start](#-quick-start)
-- [Architecture](#-architecture)
-- [Monitoring](#-monitoring)
-- [Project Structure](#-project-structure)
-- [API Reference](#-api-reference)
-- [Configuration](#-configuration)
-- [Tech Stack](#-tech-stack)
-- [Development](#-development)
-- [Documentation](#-documentation)
+A security analysis tool that scans codebases for vulnerabilities, generates threat maps, and helps you fix issues before they become problems. Just paste a GitHub URL or upload a ZIP file and let it do its thing.
 
 ---
 
-## ⭐️ Key Features
+## ✨ What It Does
 
-- **Comprehensive Security Scans**: Detects SQL injection, XSS, hardcoded secrets, and more.
-- **Multi-Language Support**: Supports 10+ languages including Go, Python, JavaScript, TypeScript, Java, PHP, C#, C++, Rust, and Ruby.
-- **Framework Detection**: Automatically identifies frameworks like React, Django, Spring, and more.
-- **Visual Threat Mapping**: Generates interactive visual maps of your application's threat landscape.
-- **Actionable Insights**: Provides suggested fixes for detected vulnerabilities.
-- **Real-time Monitoring**: Integrated Prometheus and Grafana for system health and analysis metrics.
+- **Finds Security Issues**: Catches things like SQL injection, XSS, hardcoded secrets, insecure configurations, and more
+- **Works with Multiple Languages**: Go, Python, JavaScript, TypeScript, Java, PHP, Rust, Ruby, C#, C++, and HCL (Terraform)
+- **Detects Frameworks**: Recognizes React, Django, Spring, Express, and others automatically
+- **Shows You What's Wrong**: Visual threat maps and clear explanations of each vulnerability
+- **Tells You How to Fix It**: Actionable remediation steps for every finding
+- **Tracks Everything**: Built-in monitoring with Prometheus and Grafana
+- **MCP Integration**: AI-powered analysis with automated GitHub issue creation and Slack notifications
 
 ---
 
-## ⚡ Quick Start
+## 🚀 Getting Started
 
-### Local Development
+### Option 1: Local Development
 
-Run the backend and frontend in separate terminals:
+Run backend and frontend in separate terminals:
 
 ```bash
-# Backend
-cd backend && go run main.go
+# Terminal 1 - Backend
+cd backend
+go run main.go
 ```
 
 ```bash
-# Frontend
-cd frontend && npm install && npm run dev
+# Terminal 2 - Frontend
+cd frontend
+npm install
+npm run dev
 ```
 
-Visit **[http://localhost:5173](http://localhost:5173)** to access the application.
+Open **http://localhost:3000** in your browser.
 
-### Docker Compose
+### Option 2: Docker Compose
 
-Spin up the entire stack including Prometheus and Grafana:
+This spins up everything including monitoring:
 
 ```bash
 docker-compose up -d
 ```
 
-### Kubernetes (Minikube)
+- App: http://localhost:3000
+- Prometheus: http://localhost:9090
+- Grafana: http://localhost:3001 (admin/admin)
 
-Deploy to a local Kubernetes cluster:
+### Option 3: Kubernetes (Production Ready)
+
+Images are available on Docker Hub - no need to build locally!
 
 ```bash
-# Start cluster and enable ingress
-minikube start
+# Start your cluster
+minikube start  # or use any K8s cluster
 minikube addons enable ingress
 
-# Build images
-eval $(minikube docker-env)
-docker build -t threat-modeler-backend:latest ./backend
-docker build -t threat-modeler-frontend:latest ./frontend
-
-# Deploy with Helm
+# Deploy using Helm (pulls images from Docker Hub)
 helm install threat-modeler ./helm/threat-modeler -n threat-modeler --create-namespace
 
-# Port forward frontend
-kubectl port-forward svc/frontend 3000:80 -n threat-modeler
+# For minikube - add to /etc/hosts
+echo "$(minikube ip) threat-modeler.local" | sudo tee -a /etc/hosts
 ```
 
-Visit **[http://localhost:3000](http://localhost:3000)**.
+**Docker Hub Images**:
+- `khushiiagrawal/threat-modeler-backend:latest`
+- `khushiiagrawal/threat-modeler-frontend:latest`
+
+Open **http://threat-modeler.local**
 
 ---
 
-## 🏗 Architecture
+## ⚙️ How It Works
 
 ```
-┌──────────────────────────────────────────────────────────────────────┐
-│                         Kubernetes Cluster                           │
-│                                                                      │
-│  ┌────────────────────────────────────────────────────────────────┐  │
-│  │                    Ingress Controller                          │  │
-│  │              (threat-modeler.local)                            │  │
-│  └─────────────────────────┬──────────────────────────────────────┘  │
-│                            │                                         │
-│         ┌──────────────────┴──────────────────┐                      │
-│         │                                      │                     │
-│         ▼                                      ▼                     │
-│  ┌─────────────────┐                   ┌─────────────────┐           │
-│  │    Frontend     │                   │    Backend      │           │
-│  │   (React/Nginx) │                   │   (Go/Fiber)    │           │
-│  │     Port 80     │                   │    Port 8080    │           │
-│  └─────────────────┘                   └────────┬────────┘           │
-│                                                  │                   │
-│                           ┌──────────────────────┤                   │
-│                           │                      │                   │
-│                           ▼                      ▼                   │
-│                    ┌─────────────┐        ┌─────────────┐            │
-│                    │ Prometheus  │◄───────│  /metrics   │            │
-│                    │   :9090     │        └─────────────┘            │
-│                    └──────┬──────┘                                   │
-│                           │                                          │
-│                           ▼                                          │
-│                    ┌─────────────┐                                   │
-│                    │   Grafana   │                                   │
-│                    │    :3000    │                                   │
-│                    └─────────────┘                                   │
-│                                                                      │
-│                   Namespace: threat-modeler                          │
-│                                                                      │
-└──────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                        User                                 │
+│            (GitHub URL or ZIP upload)                       │
+└─────────────────────────┬───────────────────────────────────┘
+                          │
+                          ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    Frontend (React)                         │
+│              UI with 3D visuals                             │   
+└─────────────────────────┬───────────────────────────────────┘
+                          │
+                          ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    Backend (Go/Fiber)                       │
+│                                                             │
+│  1. Clone repo / Extract ZIP                                │
+│  2. Detect languages & frameworks                           │
+│  3. Run security rules against code                         │
+│  4. Generate threat map                                     │
+│  5. Return results with fixes                               │
+└─────────────────────────┬───────────────────────────────────┘
+                          │
+                          ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    Monitoring                               │
+│         Prometheus (metrics) → Grafana (dashboards)         │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-**Request Flow:**
-1. **Ingress**: Routes `/api/*` to the Backend and all other traffic to the Frontend.
-2. **Frontend**: Serves the React application.
-3. **Backend**: Handles repository cloning, rule execution, and results generation.
-4. **Monitoring**: Prometheus scrapes metrics from the Backend; Grafana visualizes them.
+The backend does the heavy lifting - it clones your repo, figures out what languages and frameworks you're using, runs a bunch of security rules, and gives you a nice report with everything it found.
+
+---
+
+## 📂 Project Structure
+
+```
+.
+├── backend/                 # Go API server
+│   ├── internal/
+│   │   ├── handlers/        # API endpoint handlers
+│   │   ├── services/        # Core analysis logic
+│   │   └── metrics/         # Prometheus instrumentation
+│   └── main.go
+│
+├── frontend/                # React + TypeScript app
+│   └── src/
+│       ├── components/      # UI components
+│       ├── pages/           # Page views
+│       └── services/        # API client
+│
+├── mcp/                     # MCP integration (AI + GitHub + Slack)
+├── k8s/base/                # Kubernetes manifests
+├── helm/threat-modeler/     # Helm chart
+├── grafana/                 # Grafana provisioning
+├── docker-compose.yml       # Local dev with monitoring
+├── prometheus.yml           # Prometheus config
+└── alert_rules.yml          # Alerting rules
+```
+
+---
+
+## 🔌 API Endpoints
+
+| Endpoint | Method | What it does |
+|----------|--------|--------------|
+| `/api/v1/analyze/github` | POST | Analyze a GitHub repo |
+| `/api/v1/analyze/upload` | POST | Analyze an uploaded ZIP |
+| `/api/v1/analysis/{id}` | GET | Get analysis results |
+| `/api/v1/analysis/{id}/logs` | GET | Get detailed analysis logs |
+| `/health` | GET | Health check |
+| `/metrics` | GET | Prometheus metrics |
+
+**Quick example:**
+
+```bash
+curl -X POST http://localhost:8080/api/v1/analyze/github \
+  -H "Content-Type: application/json" \
+  -d '{"repo_url": "https://github.com/owner/repo"}'
+```
+
+---
+
+## 🤖 MCP Integration (AI-Powered Analysis)
+
+The MCP (Model Context Protocol) integration adds AI-powered security analysis with automated workflows.
+
+### Features
+
+- **GPT-4 + Semgrep**: AI-enhanced vulnerability detection
+- **GitHub Integration**: Auto-creates issues for security findings
+- **Slack Notifications**: Real-time alerts with action buttons
+
+### Setup
+
+```bash
+cd mcp
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run interactive setup
+python setup_github_integration.py
+```
+
+### Environment Variables
+
+Create a `.env` file in the `mcp/` directory:
+
+```bash
+# Required
+OPENAI_API_KEY=your_openai_api_key
+
+# GitHub Integration (optional)
+GITHUB_TOKEN=ghp_your_personal_access_token
+GITHUB_OWNER=your_username_or_org
+GITHUB_REPO=your_repository_name
+
+# Slack Integration (optional)
+SLACK_WEBHOOK_URL=https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK
+```
+
+### Running
+
+```bash
+# Test GitHub integration
+python test_github_integration.py
+
+# Run the analysis API
+python api.py
+```
+
+See [mcp/README.md](./mcp/README.md) for detailed configuration and usage.
 
 ---
 
 ## 📊 Monitoring
 
-The stack comes pre-configured with **Prometheus** and **Grafana** for real-time monitoring and alerting.
+Grafana dashboards show you:
+- Request rates and latencies
+- Analysis throughput
+- Vulnerabilities found (by severity)
+- System resources
 
-### Dashboard Preview
-
-<!-- POST_SCREENSHOT_HERE: Add a screenshot of the Grafana dashboard showing request latency, error rates, and analysis metrics. -->
-![alt text](<Screenshot 2026-02-02 at 1.57.15 AM.png>) ![alt text](<Screenshot 2026-02-02 at 1.56.49 AM.png>) ![alt text](<Screenshot 2026-02-02 at 1.57.39 AM.png>)
-
-### Key Metrics
-- **`http_requests_total`**: Request counts by endpoint and status.
-- **`http_request_duration_seconds`**: Latency distribution histograms.
-- **`analysis_total`**: Count of analysis runs broken down by type and status.
-- **`vulnerabilities_detected_total`**: Findings aggregated by severity and category.
-
-### Accessing Dashboards
-Once deployed to Kubernetes:
-
+Access after deployment:
 ```bash
-# Grafana (default creds: admin/admin)
+# Grafana
 kubectl port-forward svc/grafana 3001:80 -n threat-modeler
+# Open http://localhost:3001 (admin/admin)
 
 # Prometheus
 kubectl port-forward svc/prometheus 9090:9090 -n threat-modeler
@@ -157,111 +231,72 @@ kubectl port-forward svc/prometheus 9090:9090 -n threat-modeler
 
 ---
 
-## 📂 Project Structure
-
-```bash
-.
-├── backend/                 # Go API server
-│   ├── internal/rules/      # Security detection rules
-│   └── internal/metrics/    # Prometheus metrics configuration
-├── frontend/                # React + Vite + TypeScript application
-├── helm/threat-modeler/     # Helm chart for K8s deployment
-├── k8s/base/                # Raw Kubernetes manifests
-├── docker-compose.yml       # Local development orchestration
-└── grafana-dashboard.json   # Pre-configured Grafana dashboard
-```
-
----
-
-## 🔌 API Reference
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/v1/analyze/github` | `POST` | Trigger analysis for a GitHub repository. |
-| `/api/v1/analyze/upload` | `POST` | Analyze an uploaded ZIP file. |
-| `/api/v1/analysis/{id}` | `GET` | Retrieve results for a specific analysis. |
-| `/health` | `GET` | Service health check. |
-| `/metrics` | `GET` | Prometheus metrics endpoint. |
-
-**Example Request:**
-
-```bash
-curl -X POST http://localhost:8080/api/v1/analyze/github \
-  -H "Content-Type: application/json" \
-  -d '{"url": "https://github.com/owner/repo"}'
-```
-
----
-
 ## ⚙️ Configuration
 
-### Backend Environment Variables
+Key environment variables for the backend:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `PORT` | `8080` | Server listening port. |
-| `MAX_FILE_SIZE` | `100MB` | Maximum allowed upload size. |
-| `LOG_LEVEL` | `info` | Logging verbosity (debug, info, warn, error). |
+| `PORT` | `8080` | Server port |
+| `MAX_FILE_SIZE` | `100MB` | Max upload size |
+| `LOG_LEVEL` | `info` | debug, info, warn, error |
+| `ALLOWED_ORIGINS` | `localhost:3000` | CORS origins |
 
-### Helm Values (`helm/threat-modeler/values.yaml`)
-
-```yaml
-backend:
-  replicaCount: 1      # Uses in-memory state, easier with 1 replica
-  image:
-    repository: threat-modeler-backend
-    tag: latest
-
-frontend:
-  replicaCount: 2
-
-ingress:
-  enabled: true
-  host: threat-modeler.local
-```
+For Kubernetes, these are set in `k8s/base/backend-configmap.yaml`.
 
 ---
 
 ## 🛠 Tech Stack
 
-| Domain | Technologies |
-|--------|--------------|
-| **Backend** | Go 1.23, Fiber, Prometheus Client |
-| **Frontend** | React 18, Vite, TypeScript, Tailwind CSS |
-| **Infrastructure** | Kubernetes, Helm, Nginx Ingress |
-| **Monitoring** | Prometheus, Grafana |
-| **DevOps** | Docker, Multi-stage builds |
+**Backend**: Go 1.23, Fiber, Prometheus client  
+**Frontend**: React 18, TypeScript, Vite, Tailwind CSS, Three.js  
+**Infrastructure**: Docker, Kubernetes, Helm, Nginx Ingress  
+**Monitoring**: Prometheus, Grafana
 
 ---
 
 ## 💻 Development
 
 ### Prerequisites
-- **Go** 1.21+
-- **Node.js** 18+
-- **Docker**
-- **kubectl** & **Helm**
+- Go 1.21+
+- Node.js 18+
+- Docker
+- kubectl & Helm (for K8s deployment)
 
 ### Running Tests
 
 ```bash
-# Backend Tests
+# Backend
 cd backend && go test ./...
 
-# Frontend Tests
+# Frontend
 cd frontend && npm test
 ```
 
-### Building Images
+### Building & Publishing Docker Images
 
+**Build locally**:
 ```bash
-docker build -t threat-modeler-backend:latest ./backend
-docker build -t threat-modeler-frontend:latest ./frontend
+docker build -t khushiiagrawal/threat-modeler-backend:latest ./backend
+docker build -t khushiiagrawal/threat-modeler-frontend:latest ./frontend
 ```
+
+**Push to Docker Hub**:
+```bash
+docker login
+docker push khushiiagrawal/threat-modeler-backend:latest
+docker push khushiiagrawal/threat-modeler-frontend:latest
+```
+
+**Public Images**: Available at [Docker Hub](https://hub.docker.com/u/khushiiagrawal)
 
 ---
 
-## 📚 Documentation
+## 📚 More Info
 
-- [**KUBERNETES.md**](./KUBERNETES.md): Detailed guide for Kubernetes deployment.
-- [**MONITORING.md**](./MONITORING.md): Comprehensive documentation on metrics, dashboards, and alerting.
+Check out [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed docs on:
+- Docker Hub deployment and image management
+- Understanding all components (Docker, Kubernetes, Helm, Prometheus, Grafana)
+- Kubernetes deployment options
+- Monitoring setup and metrics
+- Analysis logs feature
