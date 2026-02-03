@@ -226,10 +226,21 @@ kubectl port-forward svc/grafana 3001:80 -n threat-modeler
 # Open http://localhost:3001 (admin/admin)
 
 # Prometheus
-kubectl port-forward svc/prometheus 9090:9090 -n threat-modeler
+kubectl port-forward svc/prometheus 9090:9090 -n threat-m<img width="1470" height="801" alt="Screenshot 2026-02-02 at 1 57 15 AM" src="https://github.com/user-attachments/assets/b0f33228-2adf-44c8-8899-7a843d71d57b" />
+odeler
 ```
 
+
+
+<img width="1470" height="801" alt="Screenshot 2026-02-02 at 1 57 15 AM" src="https://github.com/user-attachments/assets/36a645e8-251c-45db-a57c-1a05e92d672a" />
+
+<img width="1470" height="801" alt="Screenshot 2026-02-02 at 1 57 39 AM" src="https://github.com/user-attachments/assets/5be619b8-0563-4137-839a-d54766715640" />
+<img width="1470" height="801" alt="Screenshot 2026-02-02 at 1 56 49 AM" src="https://github.com/user-attachments/assets/0ec7dd1c-eb75-435c-95aa-2f6a8a2c03f2" />
+
+
+
 ---
+
 
 ## ⚙️ Configuration
 
