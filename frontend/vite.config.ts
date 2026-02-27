@@ -9,24 +9,22 @@ export default defineConfig(({ mode }) => ({
     host: "localhost",
     port: 3000,
     proxy: {
-      '/api': {
-        target: 'http://localhost:8080',
+      "/api": {
+        target: "http://localhost:8000",
         changeOrigin: true,
         secure: false,
-        rewrite: (path) => path
+        rewrite: (path) => path,
       },
-      '/health': {
-        target: 'http://localhost:8080',
+      "/health": {
+        target: "http://localhost:8000",
         changeOrigin: true,
         secure: false,
-      }
-    }
+      },
+    },
   },
-  plugins: [
-    react(),
-    mode === 'development' &&
-    componentTagger(),
-  ].filter(Boolean),
+  plugins: [react(), mode === "development" && componentTagger()].filter(
+    Boolean,
+  ),
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
