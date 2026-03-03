@@ -403,6 +403,8 @@ func (a *Analyzer) analyzeProject(analysisID, projectPath string) (*models.Analy
 // analyzeSourceFiles parses and analyzes source files for vulnerabilities
 func (a *Analyzer) analyzeSourceFiles(projectPath string, projectInfo *models.ProjectInfo, rules []SecurityRule) ([]models.Vulnerability, error) {
 	var vulnerabilities []models.Vulnerability
+	totalFiles := 0
+	scannedFiles := 0
 
 	// Walk through project files
 	err := filepath.Walk(projectPath, func(path string, info os.FileInfo, err error) error {
@@ -422,10 +424,14 @@ func (a *Analyzer) analyzeSourceFiles(projectPath string, projectInfo *models.Pr
 			return nil
 		}
 
+		totalFiles++
+
 		// Skip non-source files
 		if !a.isSourceFile(path, projectInfo.Languages) {
 			return nil
 		}
+
+		scannedFiles++
 
 		// Parse file and check for vulnerabilities
 		fileVulns, err := a.analyzeFile(path, projectPath, rules)
@@ -455,6 +461,8 @@ func (a *Analyzer) analyzeSourceFiles(projectPath string, projectInfo *models.Pr
 		vulnerabilities = append(vulnerabilities, fileVulns...)
 		return nil
 	})
+
+	a.logAndPrint("Files Scanned: %d/%d\n", scannedFiles, totalFiles)
 
 	return vulnerabilities, err
 }
