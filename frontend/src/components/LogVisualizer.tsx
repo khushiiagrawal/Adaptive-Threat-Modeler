@@ -1,9 +1,9 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ChevronDown, 
-  ChevronRight, 
-  Search, 
+import React, { useState, useMemo, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  ChevronDown,
+  ChevronRight,
+  Search,
   Copy,
   Download,
   X,
@@ -18,13 +18,13 @@ import {
   Zap,
   TrendingUp,
   Clock,
-  Target
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/hooks/use-toast';
-import { LogParser, type ParsedLogs, type LogSection } from '@/utils/logParser';
+  Target,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
+import { LogParser, type ParsedLogs, type LogSection } from "@/utils/logParser";
 
 interface LogVisualizerProps {
   rawLogs: string;
@@ -35,12 +35,14 @@ interface LogVisualizerProps {
 export const LogVisualizer: React.FC<LogVisualizerProps> = ({
   rawLogs,
   analysisId,
-  onClose
+  onClose,
 }) => {
   const { toast } = useToast();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [expandedSections, setExpandedSections] = useState<Set<number>>(new Set([0]));
-  
+  const [searchTerm, setSearchTerm] = useState("");
+  const [expandedSections, setExpandedSections] = useState<Set<number>>(
+    new Set([0]),
+  );
+
   const parsedLogs = useMemo(() => {
     return LogParser.parse(rawLogs);
   }, [rawLogs]);
@@ -50,36 +52,45 @@ export const LogVisualizer: React.FC<LogVisualizerProps> = ({
   }, [parsedLogs.sections]);
 
   const filteredSections = useMemo(() => {
-    return parsedLogs.sections.filter(section => {
+    return parsedLogs.sections.filter((section) => {
       // Search filter only
-      if (searchTerm && !section.content.toLowerCase().includes(searchTerm.toLowerCase()) && 
-          !section.title.toLowerCase().includes(searchTerm.toLowerCase())) {
+      if (
+        searchTerm &&
+        !section.content.toLowerCase().includes(searchTerm.toLowerCase()) &&
+        !section.title.toLowerCase().includes(searchTerm.toLowerCase())
+      ) {
         return false;
       }
-      
+
       return true;
     });
   }, [parsedLogs.sections, searchTerm]);
 
-
-
   // Calculate statistics
-  const stats = useMemo(() => {
-    const severityCounts = vulnerabilities.reduce((acc, vuln) => {
-      acc[vuln.severity] = (acc[vuln.severity] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+  const [showFilesList, setShowFilesList] = useState(false);
 
-    const totalFiles = new Set(vulnerabilities.map(v => v.file).filter(Boolean)).size;
-    
+  const stats = useMemo(() => {
+    const severityCounts = vulnerabilities.reduce(
+      (acc, vuln) => {
+        acc[vuln.severity] = (acc[vuln.severity] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
+
+    const scannedFiles = Array.from(
+      new Set(vulnerabilities.map((v) => v.file).filter(Boolean)),
+    ) as string[];
+
     return {
       total: vulnerabilities.length,
       critical: severityCounts.critical || 0,
       high: severityCounts.high || 0,
       medium: severityCounts.medium || 0,
       low: severityCounts.low || 0,
-      files: totalFiles,
-      sections: parsedLogs.sections.length
+      files: scannedFiles.length,
+      scannedFiles,
+      sections: parsedLogs.sections.length,
     };
   }, [vulnerabilities, parsedLogs.sections]);
 
@@ -95,13 +106,13 @@ export const LogVisualizer: React.FC<LogVisualizerProps> = ({
 
   const getSectionIcon = (section: LogSection) => {
     switch (section.type) {
-      case 'header':
+      case "header":
         return <CheckCircle className="w-4 h-4 text-green-400" />;
-      case 'vulnerability':
+      case "vulnerability":
         return <AlertTriangle className="w-4 h-4 text-red-400" />;
-      case 'json':
+      case "json":
         return <Code className="w-4 h-4 text-blue-400" />;
-      case 'summary':
+      case "summary":
         return <Info className="w-4 h-4 text-cyan-400" />;
       default:
         return <FileText className="w-4 h-4 text-foreground/60" />;
@@ -110,16 +121,16 @@ export const LogVisualizer: React.FC<LogVisualizerProps> = ({
 
   const getSeverityColor = (severity?: string) => {
     switch (severity) {
-      case 'critical':
-        return 'bg-red-500/20 border-red-500/50 text-red-400';
-      case 'high':
-        return 'bg-orange-500/20 border-orange-500/50 text-orange-400';
-      case 'medium':
-        return 'bg-yellow-500/20 border-yellow-500/50 text-yellow-400';
-      case 'low':
-        return 'bg-blue-500/20 border-blue-500/50 text-blue-400';
+      case "critical":
+        return "bg-red-500/20 border-red-500/50 text-red-400";
+      case "high":
+        return "bg-orange-500/20 border-orange-500/50 text-orange-400";
+      case "medium":
+        return "bg-yellow-500/20 border-yellow-500/50 text-yellow-400";
+      case "low":
+        return "bg-blue-500/20 border-blue-500/50 text-blue-400";
       default:
-        return 'bg-foreground/10 border-foreground/20 text-foreground/60';
+        return "bg-foreground/10 border-foreground/20 text-foreground/60";
     }
   };
 
@@ -143,25 +154,27 @@ export const LogVisualizer: React.FC<LogVisualizerProps> = ({
     const data = {
       metadata: parsedLogs.metadata,
       vulnerabilities,
-      sections: parsedLogs.sections.map(s => ({
+      sections: parsedLogs.sections.map((s) => ({
         title: s.title,
         type: s.type,
         severity: s.severity,
         content: s.content,
-        data: s.data
-      }))
+        data: s.data,
+      })),
     };
-    
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+
+    const blob = new Blob([JSON.stringify(data, null, 2)], {
+      type: "application/json",
+    });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
     a.download = `parsed-logs-${analysisId}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    
+
     toast({
       title: "Download started",
       description: "Parsed log data is being downloaded.",
@@ -169,10 +182,10 @@ export const LogVisualizer: React.FC<LogVisualizerProps> = ({
   };
 
   const renderJsonData = (data: any, depth = 0) => {
-    if (typeof data !== 'object' || data === null) {
+    if (typeof data !== "object" || data === null) {
       return (
         <span className="text-green-400">
-          {typeof data === 'string' ? `"${data}"` : String(data)}
+          {typeof data === "string" ? `"${data}"` : String(data)}
         </span>
       );
     }
@@ -184,7 +197,9 @@ export const LogVisualizer: React.FC<LogVisualizerProps> = ({
           {data.map((item, index) => (
             <div key={index} className="ml-4">
               {renderJsonData(item, depth + 1)}
-              {index < data.length - 1 && <span className="text-foreground/60">,</span>}
+              {index < data.length - 1 && (
+                <span className="text-foreground/60">,</span>
+              )}
             </div>
           ))}
           <span className="text-foreground/60">]</span>
@@ -194,16 +209,18 @@ export const LogVisualizer: React.FC<LogVisualizerProps> = ({
 
     return (
       <div className="ml-4">
-        <span className="text-foreground/60">{'{'}</span>
+        <span className="text-foreground/60">{"{"}</span>
         {Object.entries(data).map(([key, value], index, arr) => (
           <div key={key} className="ml-4">
             <span className="text-blue-300">"{key}"</span>
             <span className="text-foreground/60">: </span>
             {renderJsonData(value, depth + 1)}
-            {index < arr.length - 1 && <span className="text-foreground/60">,</span>}
+            {index < arr.length - 1 && (
+              <span className="text-foreground/60">,</span>
+            )}
           </div>
         ))}
-        <span className="text-foreground/60">{'}'}</span>
+        <span className="text-foreground/60">{"}"}</span>
       </div>
     );
   };
@@ -217,8 +234,14 @@ export const LogVisualizer: React.FC<LogVisualizerProps> = ({
             key={i}
             className="absolute w-1 h-1 bg-primary/30 rounded-full"
             animate={{
-              x: [Math.random() * window.innerWidth, Math.random() * window.innerWidth],
-              y: [Math.random() * window.innerHeight, Math.random() * window.innerHeight],
+              x: [
+                Math.random() * window.innerWidth,
+                Math.random() * window.innerWidth,
+              ],
+              y: [
+                Math.random() * window.innerHeight,
+                Math.random() * window.innerHeight,
+              ],
             }}
             transition={{
               duration: 10 + Math.random() * 20,
@@ -236,7 +259,6 @@ export const LogVisualizer: React.FC<LogVisualizerProps> = ({
         transition={{ type: "spring", damping: 20, stiffness: 300 }}
         className="relative w-full max-w-7xl h-[95vh] glassmorphism border border-primary/40 rounded-xl overflow-hidden flex flex-col"
       >
-        
         {/* Header with enhanced design */}
         <div className="relative flex items-center justify-between p-6 border-b border-primary/30 bg-gradient-to-r from-background/80 to-background/60">
           <div className="flex items-center space-x-6">
@@ -253,7 +275,7 @@ export const LogVisualizer: React.FC<LogVisualizerProps> = ({
               </p>
             </div>
           </div>
-          
+
           <div className="flex items-center space-x-3">
             <Button
               variant="outline"
@@ -281,26 +303,102 @@ export const LogVisualizer: React.FC<LogVisualizerProps> = ({
             {/* Vulnerability Stats */}
             <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
               <AlertTriangle className="w-6 h-6 text-red-400 mb-2" />
-              <div className="text-2xl font-bold text-red-400">{stats.critical + stats.high}</div>
+              <div className="text-2xl font-bold text-red-400">
+                {stats.critical + stats.high}
+              </div>
               <div className="text-xs text-red-300/80">Critical/High</div>
             </div>
 
             <div className="bg-primary/10 border border-primary/30 rounded-lg p-4">
               <Target className="w-6 h-6 text-primary mb-2" />
-              <div className="text-2xl font-bold text-primary">{stats.total}</div>
+              <div className="text-2xl font-bold text-primary">
+                {stats.total}
+              </div>
               <div className="text-xs text-primary/80">Total Issues</div>
             </div>
 
-            <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
+            <div
+              className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 relative cursor-pointer"
+              onMouseEnter={() => setShowFilesList(true)}
+              onMouseLeave={() => setShowFilesList(false)}
+            >
               <FileText className="w-6 h-6 text-blue-400 mb-2" />
-              <div className="text-2xl font-bold text-blue-400">{stats.files}</div>
+              <div className="text-2xl font-bold text-blue-400">
+                {parsedLogs.metadata.filesScanned != null &&
+                parsedLogs.metadata.totalRepoFiles != null ? (
+                  <>
+                    {parsedLogs.metadata.filesScanned}
+                    <span className="text-lg text-blue-400/60">
+                      /{parsedLogs.metadata.totalRepoFiles}
+                    </span>
+                  </>
+                ) : (
+                  stats.files
+                )}
+              </div>
               <div className="text-xs text-blue-300/80">Files Scanned</div>
+
+              {/* Files List Tooltip */}
+              <AnimatePresence>
+                {showFilesList && stats.scannedFiles.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute top-full left-0 mt-2 z-50 w-80 max-h-64 overflow-auto bg-gray-900/95 backdrop-blur-md border border-blue-500/40 rounded-lg shadow-2xl shadow-blue-500/10"
+                  >
+                    <div className="p-3 border-b border-blue-500/20">
+                      <div className="text-xs font-semibold text-blue-400 flex items-center space-x-2">
+                        <FileText className="w-3 h-3" />
+                        <span>Scanned Files ({stats.scannedFiles.length})</span>
+                      </div>
+                    </div>
+                    <div className="p-2 space-y-1 scrollbar-hide">
+                      {stats.scannedFiles.map((file, idx) => {
+                        const fileName = file.split("/").pop() || file;
+                        const fileDir = file.split("/").slice(0, -1).join("/");
+                        const issuesInFile = vulnerabilities.filter(
+                          (v) => v.file === file,
+                        ).length;
+                        return (
+                          <div
+                            key={idx}
+                            className="flex items-center justify-between p-2 rounded-md hover:bg-blue-500/10 transition-colors group"
+                          >
+                            <div className="flex items-center space-x-2 min-w-0 flex-1">
+                              <Code className="w-3 h-3 text-blue-400 flex-shrink-0" />
+                              <div className="min-w-0 flex-1">
+                                <div className="text-xs font-medium text-blue-300 truncate">
+                                  {fileName}
+                                </div>
+                                {fileDir && (
+                                  <div className="text-[10px] text-foreground/40 truncate">
+                                    {fileDir}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            <Badge
+                              variant="outline"
+                              className="text-[10px] ml-2 flex-shrink-0 bg-blue-500/10 border-blue-500/30 text-blue-400"
+                            >
+                              {issuesInFile}{" "}
+                              {issuesInFile === 1 ? "issue" : "issues"}
+                            </Badge>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-4">
               <Code className="w-6 h-6 text-purple-400 mb-2" />
               <div className="text-xl font-bold text-purple-400">
-                {parsedLogs.metadata.languages?.join(', ') || 'Mixed'}
+                {parsedLogs.metadata.languages?.join(", ") || "Mixed"}
               </div>
               <div className="text-xs text-purple-300/80">Languages</div>
             </div>
@@ -308,14 +406,16 @@ export const LogVisualizer: React.FC<LogVisualizerProps> = ({
             <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
               <Clock className="w-6 h-6 text-green-400 mb-2" />
               <div className="text-lg font-bold text-green-400">
-                {parsedLogs.metadata.processingTime || 'N/A'}
+                {parsedLogs.metadata.processingTime || "N/A"}
               </div>
               <div className="text-xs text-green-300/80">Process Time</div>
             </div>
 
             <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-lg p-4">
               <TrendingUp className="w-6 h-6 text-cyan-400 mb-2" />
-              <div className="text-2xl font-bold text-cyan-400">{stats.sections}</div>
+              <div className="text-2xl font-bold text-cyan-400">
+                {stats.sections}
+              </div>
               <div className="text-xs text-cyan-300/80">Log Sections</div>
             </div>
           </div>
@@ -323,41 +423,59 @@ export const LogVisualizer: React.FC<LogVisualizerProps> = ({
           {/* Risk Level Indicator */}
           <div className="mt-6 p-4 bg-gradient-to-r from-red-500/10 via-yellow-500/10 to-green-500/10 border border-primary/20 rounded-lg">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-medium">Security Risk Assessment</span>
+              <span className="text-sm font-medium">
+                Security Risk Assessment
+              </span>
               <Zap className="w-4 h-4 text-yellow-400" />
             </div>
-            
+
             <div className="flex space-x-1 h-3 bg-background/50 rounded-full overflow-hidden mb-3">
-              <motion.div 
-                className="bg-red-500" 
-                style={{ width: `${(stats.critical / Math.max(stats.total, 1)) * 100}%` }}
+              <motion.div
+                className="bg-red-500"
+                style={{
+                  width: `${(stats.critical / Math.max(stats.total, 1)) * 100}%`,
+                }}
                 initial={{ width: 0 }}
-                animate={{ width: `${(stats.critical / Math.max(stats.total, 1)) * 100}%` }}
+                animate={{
+                  width: `${(stats.critical / Math.max(stats.total, 1)) * 100}%`,
+                }}
                 transition={{ duration: 1, delay: 0.5 }}
               />
-              <motion.div 
-                className="bg-orange-500" 
-                style={{ width: `${(stats.high / Math.max(stats.total, 1)) * 100}%` }}
+              <motion.div
+                className="bg-orange-500"
+                style={{
+                  width: `${(stats.high / Math.max(stats.total, 1)) * 100}%`,
+                }}
                 initial={{ width: 0 }}
-                animate={{ width: `${(stats.high / Math.max(stats.total, 1)) * 100}%` }}
+                animate={{
+                  width: `${(stats.high / Math.max(stats.total, 1)) * 100}%`,
+                }}
                 transition={{ duration: 1, delay: 0.7 }}
               />
-              <motion.div 
-                className="bg-yellow-500" 
-                style={{ width: `${(stats.medium / Math.max(stats.total, 1)) * 100}%` }}
+              <motion.div
+                className="bg-yellow-500"
+                style={{
+                  width: `${(stats.medium / Math.max(stats.total, 1)) * 100}%`,
+                }}
                 initial={{ width: 0 }}
-                animate={{ width: `${(stats.medium / Math.max(stats.total, 1)) * 100}%` }}
+                animate={{
+                  width: `${(stats.medium / Math.max(stats.total, 1)) * 100}%`,
+                }}
                 transition={{ duration: 1, delay: 0.9 }}
               />
-              <motion.div 
-                className="bg-blue-500" 
-                style={{ width: `${(stats.low / Math.max(stats.total, 1)) * 100}%` }}
+              <motion.div
+                className="bg-blue-500"
+                style={{
+                  width: `${(stats.low / Math.max(stats.total, 1)) * 100}%`,
+                }}
                 initial={{ width: 0 }}
-                animate={{ width: `${(stats.low / Math.max(stats.total, 1)) * 100}%` }}
+                animate={{
+                  width: `${(stats.low / Math.max(stats.total, 1)) * 100}%`,
+                }}
                 transition={{ duration: 1, delay: 1.1 }}
               />
             </div>
-            
+
             {/* Legend */}
             <div className="flex items-center justify-between text-xs text-foreground/70">
               <div className="flex items-center space-x-4">
@@ -404,11 +522,11 @@ export const LogVisualizer: React.FC<LogVisualizerProps> = ({
                 key={index}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ 
-                  delay: index * 0.1, 
-                  type: "spring", 
+                transition={{
+                  delay: index * 0.1,
+                  type: "spring",
                   stiffness: 100,
-                  damping: 15
+                  damping: 15,
                 }}
                 className={`border rounded-xl overflow-hidden group relative ${getSeverityColor(section.severity)}`}
               >
@@ -424,41 +542,44 @@ export const LogVisualizer: React.FC<LogVisualizerProps> = ({
                     >
                       <ChevronRight className="w-5 h-5" />
                     </motion.div>
-                    
+
                     <motion.div
-                      animate={{ 
+                      animate={{
                         scale: expandedSections.has(index) ? 1.1 : 1,
-                        rotate: expandedSections.has(index) ? 5 : 0
+                        rotate: expandedSections.has(index) ? 5 : 0,
                       }}
                       transition={{ duration: 0.3 }}
                     >
                       {getSectionIcon(section)}
                     </motion.div>
-                    
+
                     <div>
                       <h3 className="font-bold text-lg">{section.title}</h3>
-                      {section.type === 'json' && (
+                      {section.type === "json" && (
                         <p className="text-xs text-foreground/60 mt-1">
                           Interactive JSON data • Click to explore
                         </p>
                       )}
                     </div>
-                    
+
                     {section.severity && (
-                      <Badge 
-                        variant="outline" 
+                      <Badge
+                        variant="outline"
                         className={`text-xs capitalize font-semibold ${
-                          section.severity === 'critical' ? 'border-red-500/50 text-red-400 bg-red-500/10' :
-                          section.severity === 'high' ? 'border-orange-500/50 text-orange-400 bg-orange-500/10' :
-                          section.severity === 'medium' ? 'border-yellow-500/50 text-yellow-400 bg-yellow-500/10' :
-                          'border-blue-500/50 text-blue-400 bg-blue-500/10'
+                          section.severity === "critical"
+                            ? "border-red-500/50 text-red-400 bg-red-500/10"
+                            : section.severity === "high"
+                              ? "border-orange-500/50 text-orange-400 bg-orange-500/10"
+                              : section.severity === "medium"
+                                ? "border-yellow-500/50 text-yellow-400 bg-yellow-500/10"
+                                : "border-blue-500/50 text-blue-400 bg-blue-500/10"
                         }`}
                       >
                         {section.severity}
                       </Badge>
                     )}
                   </div>
-                  
+
                   <Button
                     variant="ghost"
                     size="sm"
@@ -477,24 +598,27 @@ export const LogVisualizer: React.FC<LogVisualizerProps> = ({
                   {expandedSections.has(index) && (
                     <motion.div
                       initial={{ height: 0, opacity: 0, y: -20 }}
-                      animate={{ height: 'auto', opacity: 1, y: 0 }}
+                      animate={{ height: "auto", opacity: 1, y: 0 }}
                       exit={{ height: 0, opacity: 0, y: -10 }}
-                      transition={{ 
-                        duration: 0.4, 
-                        type: "spring", 
+                      transition={{
+                        duration: 0.4,
+                        type: "spring",
                         stiffness: 100,
-                        damping: 20
+                        damping: 20,
                       }}
                       className="border-t border-current/30 relative overflow-hidden"
                     >
                       {/* Content background effect */}
                       <div className="absolute inset-0 bg-gradient-to-br from-background/80 via-background/60 to-background/40" />
-                      
+
                       <div className="relative z-10 p-6">
-                        {section.type === 'json' && section.data ? (
+                        {section.type === "json" && section.data ? (
                           <div className="relative">
                             <div className="absolute top-0 right-0 flex items-center space-x-2 mb-4">
-                              <Badge variant="outline" className="text-xs bg-blue-500/10 border-blue-500/30 text-blue-400">
+                              <Badge
+                                variant="outline"
+                                className="text-xs bg-blue-500/10 border-blue-500/30 text-blue-400"
+                              >
                                 JSON Data
                               </Badge>
                             </div>
@@ -511,12 +635,15 @@ export const LogVisualizer: React.FC<LogVisualizerProps> = ({
                         ) : (
                           <div className="relative">
                             <div className="absolute top-0 right-0 flex items-center space-x-2 mb-4">
-                              <Badge variant="outline" className="text-xs bg-foreground/10 border-foreground/20 text-foreground/60">
+                              <Badge
+                                variant="outline"
+                                className="text-xs bg-foreground/10 border-foreground/20 text-foreground/60"
+                              >
                                 Log Output
                               </Badge>
                             </div>
                             <div className="bg-black/40 rounded-lg p-4 border border-primary/20 mt-8">
-                              <motion.pre 
+                              <motion.pre
                                 className="font-mono text-sm whitespace-pre-wrap overflow-auto max-h-96 text-foreground/90 leading-relaxed scrollbar-hide"
                                 initial={{ opacity: 0, x: -10 }}
                                 animate={{ opacity: 1, x: 0 }}
@@ -527,13 +654,17 @@ export const LogVisualizer: React.FC<LogVisualizerProps> = ({
                             </div>
                           </div>
                         )}
-                        
+
                         {/* Section metadata */}
                         <div className="mt-4 pt-4 border-t border-current/10 flex items-center justify-between text-xs text-foreground/50">
                           <div className="flex items-center space-x-4">
                             <span>Type: {section.type}</span>
-                            <span>Lines: {section.content.split('\n').length}</span>
-                            {section.severity && <span>Severity: {section.severity}</span>}
+                            <span>
+                              Lines: {section.content.split("\n").length}
+                            </span>
+                            {section.severity && (
+                              <span>Severity: {section.severity}</span>
+                            )}
                           </div>
                           <div className="flex items-center space-x-2">
                             <div className="w-2 h-2 bg-primary/60 rounded-full" />
@@ -547,11 +678,13 @@ export const LogVisualizer: React.FC<LogVisualizerProps> = ({
               </motion.div>
             ))}
           </div>
-          
+
           {filteredSections.length === 0 && (
             <div className="text-center py-12">
               <XCircle className="w-12 h-12 text-foreground/40 mx-auto mb-4" />
-              <p className="text-foreground/60">No log sections match your current filters.</p>
+              <p className="text-foreground/60">
+                No log sections match your current filters.
+              </p>
             </div>
           )}
         </div>
